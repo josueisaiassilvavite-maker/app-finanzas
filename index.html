@@ -2,17 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Control Financiero</title>
 
 <!-- iOS PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Finanzas">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0B0D10">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230B0D10'/%3E%3Ctext x='50' y='62' font-size='46' text-anchor='middle' fill='%23CBA35C' font-family='Georgia,serif'%3ES/.%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Control%20Financiero","short_name":"Finanzas","display":"standalone","background_color":"%230B0D10","theme_color":"%230B0D10","start_url":"."}'>
 
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script>
@@ -21,9 +25,16 @@
       extend: {
         fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
         colors: {
-          base: '#0B0D10', surface: '#15181C', surface2: '#1C2025', hair: '#262B31',
-          ink: '#F2F0EB', ink2: '#9AA0A8', gold: '#CBA35C', goldSoft: 'rgba(203,163,92,0.14)',
-          up: '#3FC17E', down: '#E5635C', cc: '#8A5CFF', ccSoft: 'rgba(138,92,255,0.14)'
+          base: '#0B0D10',
+          surface: '#15181C',
+          surface2: '#1C2025',
+          hair: '#262B31',
+          ink: '#F2F0EB',
+          ink2: '#9AA0A8',
+          gold: '#CBA35C',
+          goldSoft: 'rgba(203,163,92,0.14)',
+          up: '#3FC17E',
+          down: '#E5635C',
         },
         borderRadius: { xl2: '22px' },
       }
@@ -34,418 +45,1128 @@
 <style>
   html, body { background: #0B0D10; overscroll-behavior-y: none; }
   * { -webkit-tap-highlight-color: transparent; }
-  .tabular { font-variant-numeric: tabular-nums; }
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  .tabular { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
   .safe-top { padding-top: env(safe-area-inset-top, 24px); }
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
   ::-webkit-scrollbar { display: none; }
-  
+  .scrollbar-none { scrollbar-width: none; }
+
   .view { display: none; }
   .view.active { display: block; animation: fadeIn .28s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-  .sheet-overlay { opacity: 0; visibility: hidden; transition: opacity .25s ease; }
-  .sheet-overlay.open { opacity: 1; visibility: visible; }
+  .sheet-overlay { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .25s ease, visibility 0s linear .25s; }
+  .sheet-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .25s ease, visibility 0s linear; }
   .sheet-panel { transform: translateY(100%); transition: transform .32s cubic-bezier(.22,1,.36,1); }
   .sheet-overlay.open .sheet-panel { transform: translateY(0); }
 
+  .navbtn svg { transition: stroke .2s ease, fill .2s ease; }
   .navbtn.active .navlabel { color: #CBA35C; }
   .navbtn.active svg { stroke: #CBA35C; }
 
-  .toast { transform: translateY(120%); opacity: 0; transition: all .3s cubic-bezier(.22,1,.36,1); }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  
-  .fab { box-shadow: 0 8px 24px rgba(203,163,92,0.3); }
+  .skeleton { background: linear-gradient(90deg, #1C2025 25%, #232830 37%, #1C2025 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+  @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+  .toast { transform: translateY(120%); opacity: 0; visibility: hidden; transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease, visibility 0s linear .3s; }
+  .toast.show { transform: translateY(0); opacity: 1; visibility: visible; transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease, visibility 0s linear; }
+
+  input[type="text"], input[type="number"] { -webkit-appearance: none; }
+  .progress-track { background: #262B31; }
+
+  .mov-tipo-btn, .mov-canal-btn, .pago-origen-btn { background: #1C2025; border-color: #262B31; color: #9AA0A8; }
+  .mov-tipo-btn.active[data-tipo="Ingreso"] { background: rgba(63,193,126,0.14); border-color: #3FC17E; color: #3FC17E; }
+  .mov-tipo-btn.active[data-tipo="Gasto"] { background: rgba(229,99,92,0.14); border-color: #E5635C; color: #E5635C; }
+  .mov-canal-btn.active, .pago-origen-btn.active { background: rgba(203,163,92,0.14); border-color: #CBA35C; color: #CBA35C; }
+
+  .credit-card { position: relative; overflow: hidden; }
+  .credit-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 55%); pointer-events: none; }
+
+  select { color-scheme: dark; }
 </style>
 </head>
 
-<body class="bg-base text-ink min-h-screen">
+<body class="bg-base text-ink min-h-screen scrollbar-none">
+
 <div class="max-w-md mx-auto min-h-screen flex flex-col relative">
 
-  <!-- HEADER -->
+  <!-- ===================== HEADER ===================== -->
   <header class="safe-top px-5 pt-4 pb-2 flex items-center justify-between">
     <div>
       <p class="text-[13px] text-ink2 font-medium" id="greeting">Buenas tardes</p>
-      <h1 class="text-[20px] font-bold tracking-tight -mt-0.5" id="headerTitle">Dashboard</h1>
+      <h1 class="text-[19px] font-semibold tracking-tight -mt-0.5" id="headerTitle">Dashboard</h1>
     </div>
-    <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-ink2/40"></div>
+    <div id="statusDot" class="w-2 h-2 rounded-full bg-ink2/40 mr-1"></div>
   </header>
 
-  <!-- MAIN SCROLL AREA -->
-  <main class="flex-1 overflow-y-auto px-5 pb-32 pt-2">
+  <!-- ===================== MAIN SCROLL AREA ===================== -->
+  <main class="flex-1 overflow-y-auto scrollbar-none px-5 pb-32 pt-2">
 
-    <!-- VIEW 1: DASHBOARD -->
+    <!-- ---------- VIEW 1: DASHBOARD ---------- -->
     <section id="view-dashboard" class="view active">
-      <div class="relative rounded-xl2 border border-hair bg-gradient-to-b from-surface2 to-surface p-5 overflow-hidden mb-5">
-        <p class="text-[12.5px] text-ink2 font-medium mb-1">Flujo Neto (Mes)</p>
-        <p class="tabular text-[34px] font-extrabold leading-none" id="saldoNeto">S/ 0.00</p>
+
+      <!-- Balance hero card -->
+      <div class="relative rounded-xl2 border border-hair bg-gradient-to-b from-surface2 to-surface p-5 overflow-hidden mb-4">
+        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gold/10 blur-3xl"></div>
+        <p class="text-[12.5px] text-ink2 font-medium mb-1">Saldo neto</p>
+        <p class="tabular text-[36px] font-extrabold leading-none" id="saldoNeto">S/ 0.00</p>
         <div class="h-px bg-hair my-4"></div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <p class="text-[12px] text-ink2 font-medium mb-1">Ingresos</p>
-            <p class="tabular text-[17px] font-bold text-up" id="totalIngresos">S/ 0.00</p>
+            <div class="flex items-center gap-1.5 mb-1">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+              <span class="text-[12px] text-ink2 font-medium">Ingresos</span>
+            </div>
+            <p class="tabular text-[18px] font-bold text-up" id="totalIngresos">S/ 0.00</p>
           </div>
           <div>
-            <p class="text-[12px] text-ink2 font-medium mb-1">Gastos</p>
-            <p class="tabular text-[17px] font-bold text-down" id="totalGastos">S/ 0.00</p>
+            <div class="flex items-center gap-1.5 mb-1">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E5635C" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+              <span class="text-[12px] text-ink2 font-medium">Gastos</span>
+            </div>
+            <p class="tabular text-[18px] font-bold text-down" id="totalGastos">S/ 0.00</p>
           </div>
         </div>
       </div>
 
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-[15px] font-semibold">Últimos movimientos</h2>
-        <span class="text-[11px] text-ink2" id="lastSync">—</span>
+      <!-- Movements -->
+      <div class="flex items-center justify-between mb-2 mt-6">
+        <h2 class="text-[14.5px] font-semibold">Últimos movimientos</h2>
+        <span class="text-[11.5px] text-ink2" id="lastSync">—</span>
       </div>
+
       <div id="movList" class="space-y-2"></div>
+
+      <div id="dashError" class="hidden mt-4 rounded-xl2 border border-hair bg-surface p-5 text-center">
+        <p class="text-[13.5px] text-ink2 mb-3">No se pudo cargar el flujo de caja. Revisa tu conexión.</p>
+        <button onclick="fetchTransactions()" class="px-4 py-2 rounded-xl bg-gold/15 text-gold text-[13px] font-semibold">Reintentar</button>
+      </div>
     </section>
 
-    <!-- VIEW 2: CARTERA (CUENTAS Y TARJETAS) -->
+    <!-- ---------- VIEW 2: CARTERA (ACTIVOS + PASIVOS) ---------- -->
     <section id="view-cartera" class="view">
-      
-      <!-- Activos -->
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-[15px] font-semibold">Cuentas (Activos)</h2>
-        <button onclick="openConfigSaldos()" class="text-[12px] text-gold font-medium">Configurar iniciales</button>
-      </div>
-      
+
+      <!-- ACTIVOS -->
+      <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide mb-2.5">Activos</h2>
       <div class="grid grid-cols-2 gap-3 mb-6">
-        <div class="bg-surface border border-hair rounded-xl2 p-4">
-          <p class="text-[12px] text-ink2 font-medium mb-1">Bancos / Yape</p>
-          <p class="tabular text-[20px] font-bold text-up" id="saldoBancos">S/ 0.00</p>
+
+        <!-- Efectivo -->
+        <div class="rounded-xl2 border border-hair bg-surface p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-8 h-8 rounded-full bg-up/10 flex items-center justify-center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>
+            </div>
+            <button onclick="abrirEditarSaldo('efectivo')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+          </div>
+          <p class="text-[11.5px] text-ink2 font-medium mb-0.5">Efectivo</p>
+          <p class="tabular text-[16.5px] font-extrabold leading-tight" id="saldoEfectivo">S/ 0.00</p>
         </div>
-        <div class="bg-surface border border-hair rounded-xl2 p-4">
-          <p class="text-[12px] text-ink2 font-medium mb-1">Efectivo</p>
-          <p class="tabular text-[20px] font-bold text-up" id="saldoEfectivo">S/ 0.00</p>
+
+        <!-- Bancos / Yape -->
+        <div class="rounded-xl2 border border-hair bg-surface p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg>
+            </div>
+            <button onclick="abrirEditarSaldo('bancos')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+          </div>
+          <p class="text-[11.5px] text-ink2 font-medium mb-0.5">Bancos / Yape</p>
+          <p class="tabular text-[16.5px] font-extrabold leading-tight" id="saldoBancos">S/ 0.00</p>
         </div>
       </div>
 
-      <!-- Pasivos (Tarjetas de Crédito) -->
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-[15px] font-semibold">Tarjetas de Crédito (Pasivos)</h2>
+      <!-- PASIVOS -->
+      <div class="flex items-center justify-between mb-2.5">
+        <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Pasivos · Tarjetas</h2>
+        <button onclick="openNuevaTarjeta()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Añadir tarjeta
+        </button>
       </div>
-      <div id="listaTarjetas" class="space-y-3"></div>
-      
+
+      <div id="tarjetasList" class="space-y-3"></div>
+
+      <div id="tarjetasEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-8 text-center">
+        <p class="text-[13.5px] text-ink2">Aún no registras tarjetas de crédito.<br>Toca "Añadir tarjeta" para empezar.</p>
+      </div>
     </section>
 
-    <!-- VIEW 3: CUENTAS POR COBRAR -->
     <section id="view-cxc" class="view">
+
       <div class="rounded-xl2 border border-hair bg-surface p-4 mb-4 flex items-center justify-between">
         <div>
           <p class="text-[12px] text-ink2 font-medium mb-0.5">Total por cobrar</p>
           <p class="tabular text-[22px] font-extrabold text-gold" id="totalPorCobrar">S/ 0.00</p>
         </div>
-        <button onclick="openSheet('sheetDeudor')" class="shrink-0 bg-gold text-base font-semibold text-[13px] px-4 py-2.5 rounded-xl">
-          + Nuevo
+        <button onclick="openNuevoDeudor()" class="shrink-0 flex items-center gap-1.5 bg-gold text-base font-semibold text-[13px] px-4 py-2.5 rounded-xl active:scale-95 transition-transform">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0B0D10" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Nuevo deudor
         </button>
       </div>
+
       <div id="deudoresList" class="space-y-3"></div>
+
+      <div id="cxcEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-8 text-center">
+        <p class="text-[13.5px] text-ink2">Aún no registras deudores.<br>Toca "Nuevo deudor" para empezar.</p>
+      </div>
     </section>
 
-    <!-- VIEW 4: HERRAMIENTAS -->
+    <!-- ---------- VIEW 3: HERRAMIENTAS ---------- -->
     <section id="view-tools" class="view">
-      <p class="text-[12.5px] text-ink2 font-medium mb-3 mt-1">Sincronización</p>
-      <button onclick="fetchTransactions(true)" class="w-full flex items-center justify-between bg-surface border border-hair rounded-xl2 p-4 mb-3">
-        <div class="text-left"><p class="text-[14px] font-semibold">Actualizar base de datos</p><p class="text-[11.5px] text-ink2">Sincroniza con Google Sheets</p></div>
+      <p class="text-[12.5px] text-ink2 font-medium mb-3 mt-1">Datos</p>
+
+      <button onclick="fetchTransactions(true)" class="w-full flex items-center justify-between bg-surface border border-hair rounded-xl2 p-4 mb-3 active:bg-surface2 transition-colors">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-goldSoft flex items-center justify-center">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          </div>
+          <div class="text-left">
+            <p class="text-[14px] font-semibold">Actualizar datos</p>
+            <p class="text-[11.5px] text-ink2" id="toolsLastSync">Sincroniza el flujo de caja</p>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
-      <p class="text-[12.5px] text-ink2 font-medium mb-3 mt-6">Sistema</p>
-      <div class="bg-surface border border-hair rounded-xl2 p-4 text-[13px] text-ink2 leading-relaxed">
-        Dashboard contable conectado a Google Apps Script.
+
+      <button onclick="exportarDeudoresJSON()" class="w-full flex items-center justify-between bg-surface border border-hair rounded-xl2 p-4 mb-3 active:bg-surface2 transition-colors">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-goldSoft flex items-center justify-center">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 11l4 4 4-4M4 21h16"/></svg>
+          </div>
+          <div class="text-left">
+            <p class="text-[14px] font-semibold">Exportar cuentas por cobrar</p>
+            <p class="text-[11.5px] text-ink2">Descarga un backup en JSON</p>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+
+      <p class="text-[12.5px] text-ink2 font-medium mb-3 mt-6">Acerca de</p>
+      <div class="bg-surface border border-hair rounded-xl2 p-4">
+        <p class="text-[13px] text-ink2 leading-relaxed">El flujo de caja se obtiene desde tu hoja de cálculo conectada. Las cuentas por cobrar se guardan solo en este dispositivo.</p>
       </div>
     </section>
 
   </main>
 
-  <!-- FAB (NEW MOVEMENT) -->
-  <button id="fabBtn" onclick="openSheet('sheetManual')" class="fab fixed bottom-[90px] right-5 w-14 h-14 bg-gold rounded-full flex items-center justify-center z-30 transition-transform active:scale-90">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B0D10" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-  </button>
-
-  <!-- BOTTOM NAV -->
-  <nav class="safe-bottom border-t border-hair bg-base/90 backdrop-blur-xl fixed bottom-0 left-0 right-0 z-40">
+  <!-- ===================== BOTTOM NAV ===================== -->
+  <nav class="safe-bottom border-t border-hair bg-base/90 backdrop-blur-xl fixed bottom-0 left-0 right-0">
     <div class="max-w-md mx-auto grid grid-cols-4">
       <button class="navbtn active flex flex-col items-center gap-1 py-3" data-tab="dashboard" onclick="switchTab('dashboard')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="17" rx="1"/></svg>
-        <span class="navlabel text-[10px] font-medium text-ink2">Dashboard</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="17" rx="1"/></svg>
+        <span class="navlabel text-[10px] font-medium text-gold">Dashboard</span>
       </button>
       <button class="navbtn flex flex-col items-center gap-1 py-3" data-tab="cartera" onclick="switchTab('cartera')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/><path d="M3 11h18M18 15h.01"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-3a2 2 0 0 0 0 4h3"/><path d="M16 3H5a2 2 0 0 0-2 2v3"/></svg>
         <span class="navlabel text-[10px] font-medium text-ink2">Cartera</span>
       </button>
       <button class="navbtn flex flex-col items-center gap-1 py-3" data-tab="cxc" onclick="switchTab('cxc')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span class="navlabel text-[10px] font-medium text-ink2">Deudores</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="navlabel text-[10px] font-medium text-ink2">Por cobrar</span>
       </button>
       <button class="navbtn flex flex-col items-center gap-1 py-3" data-tab="tools" onclick="switchTab('tools')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span class="navlabel text-[10px] font-medium text-ink2">Ajustes</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span class="navlabel text-[10px] font-medium text-ink2">Herramientas</span>
       </button>
     </div>
   </nav>
 
-  <!-- MODALS / SHEETS -->
-  <!-- Registro Manual -->
-  <div id="sheetManual" class="sheet-overlay fixed inset-0 bg-black/70 z-50 flex items-end" onclick="if(event.target===this) closeSheet('sheetManual')">
-    <div class="sheet-panel w-full bg-surface rounded-t-3xl p-5 safe-bottom">
+  <!-- ===================== FAB: MOVIMIENTO MANUAL ===================== -->
+  <button onclick="openMovimiento()" class="fixed right-5 z-30 w-14 h-14 rounded-full bg-gold shadow-lg shadow-black/40 flex items-center justify-center active:scale-90 transition-transform ease-out" style="bottom: calc(96px + env(safe-area-inset-bottom, 20px));">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B0D10" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <!-- ===================== SHEET: NUEVO DEUDOR ===================== -->
+  <div id="sheetDeudor" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetDeudor')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div>
-      <h3 class="text-[16px] font-semibold mb-4">Registrar Movimiento</h3>
-      
-      <select id="inpManualTipo" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[14px] text-ink mb-3 outline-none">
-        <option value="Gasto">Gasto / Salida</option>
-        <option value="Ingreso">Ingreso / Abono</option>
+      <h3 class="text-[16px] font-semibold mb-4">Nuevo deudor</h3>
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Nombre</label>
+      <input id="inpNombre" type="text" placeholder="Ej. Juan Pérez" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-4 outline-none focus:border-gold/60">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Monto total (S/)</label>
+      <input id="inpMonto" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-6 outline-none focus:border-gold/60">
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeSheet('sheetDeudor')" class="py-3.5 rounded-xl bg-surface2 border border-hair text-[14px] font-semibold text-ink2">Cancelar</button>
+        <button onclick="guardarDeudor()" class="py-3.5 rounded-xl bg-gold text-base text-[14px] font-bold active:scale-95 transition-transform">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SHEET: REGISTRAR ABONO ===================== -->
+  <div id="sheetAbono" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetAbono')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div>
+      <h3 class="text-[16px] font-semibold mb-1">Registrar abono</h3>
+      <p class="text-[13px] text-ink2 mb-4" id="abonoDeudorNombre">—</p>
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Saldo pendiente</label>
+      <p class="tabular text-[20px] font-bold text-gold mb-4" id="abonoSaldoActual">S/ 0.00</p>
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Monto del abono (S/)</label>
+      <input id="inpAbono" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-6 outline-none focus:border-gold/60">
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeSheet('sheetAbono')" class="py-3.5 rounded-xl bg-surface2 border border-hair text-[14px] font-semibold text-ink2">Cancelar</button>
+        <button onclick="confirmarAbono()" class="py-3.5 rounded-xl bg-gold text-base text-[14px] font-bold active:scale-95 transition-transform">Registrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SHEET: NUEVA / EDITAR TARJETA ===================== -->
+  <div id="sheetTarjeta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetTarjeta')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div>
+      <h3 class="text-[16px] font-semibold mb-4" id="tarjetaSheetTitle">Nueva tarjeta</h3>
+      <input type="hidden" id="tarjetaEditId" value="">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Banco / Tarjeta</label>
+      <input id="inpTarjNombre" type="text" placeholder="Ej. BCP Visa" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-4 outline-none focus:border-gold/60">
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Línea de crédito</label>
+          <input id="inpTarjLinea" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 outline-none focus:border-gold/60">
+        </div>
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Deuda a la fecha</label>
+          <input id="inpTarjDeuda" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 outline-none focus:border-gold/60">
+        </div>
+      </div>
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Pago del mes (opcional)</label>
+      <input id="inpTarjPagoMes" type="number" inputmode="decimal" placeholder="Cuota a vencer" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-4 outline-none focus:border-gold/60">
+
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Día de cierre</label>
+          <input id="inpTarjCierre" type="number" min="1" max="31" placeholder="Ej. 15" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 outline-none focus:border-gold/60">
+        </div>
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Día de pago</label>
+          <input id="inpTarjPago" type="number" min="1" max="31" placeholder="Ej. 5" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 outline-none focus:border-gold/60">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeSheet('sheetTarjeta')" class="py-3.5 rounded-xl bg-surface2 border border-hair text-[14px] font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button>
+        <button onclick="guardarTarjeta()" class="py-3.5 rounded-xl bg-gold text-base text-[14px] font-bold active:scale-95 transition-transform ease-out">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SHEET: EDITAR SALDO INICIAL ===================== -->
+  <div id="sheetSaldoInicial" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetSaldoInicial')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div>
+      <h3 class="text-[16px] font-semibold mb-4" id="saldoInicialTitulo">Saldo inicial</h3>
+      <input type="hidden" id="saldoInicialTipo" value="">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Monto (S/)</label>
+      <input id="inpSaldoInicial" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-6 outline-none focus:border-gold/60">
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeSheet('sheetSaldoInicial')" class="py-3.5 rounded-xl bg-surface2 border border-hair text-[14px] font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button>
+        <button onclick="guardarSaldoInicial()" class="py-3.5 rounded-xl bg-gold text-base text-[14px] font-bold active:scale-95 transition-transform ease-out">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SHEET: PAGAR TARJETA ===================== -->
+  <div id="sheetPagoTarjeta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetPagoTarjeta')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div>
+      <h3 class="text-[16px] font-semibold mb-1">Pagar tarjeta</h3>
+      <p class="text-[13px] text-ink2 mb-4" id="pagoTarjNombre">—</p>
+      <input type="hidden" id="pagoTarjId" value="">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Monto a pagar (S/)</label>
+      <input id="inpPagoMonto" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-4 outline-none focus:border-gold/60">
+
+      <label class="text-[12px] text-ink2 font-medium mb-2 block">Origen de los fondos</label>
+      <div class="grid grid-cols-2 gap-3 mb-6" id="pagoOrigenToggle">
+        <button type="button" onclick="setPagoOrigen('Efectivo')" data-origen="Efectivo" class="pago-origen-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Efectivo</button>
+        <button type="button" onclick="setPagoOrigen('Bancos')" data-origen="Bancos" class="pago-origen-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Bancos / Yape</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeSheet('sheetPagoTarjeta')" class="py-3.5 rounded-xl bg-surface2 border border-hair text-[14px] font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button>
+        <button onclick="confirmarPagoTarjeta()" class="py-3.5 rounded-xl bg-gold text-base text-[14px] font-bold active:scale-95 transition-transform ease-out">Pagar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SHEET: MOVIMIENTO MANUAL ===================== -->
+  <div id="sheetMovimiento" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetMovimiento')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div>
+      <h3 class="text-[16px] font-semibold mb-4">Nuevo movimiento</h3>
+
+      <div class="grid grid-cols-2 gap-3 mb-4" id="movTipoToggle">
+        <button type="button" onclick="setMovTipo('Ingreso')" data-tipo="Ingreso" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Ingreso</button>
+        <button type="button" onclick="setMovTipo('Gasto')" data-tipo="Gasto" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Gasto</button>
+      </div>
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Monto (S/)</label>
+      <input id="inpMovMonto" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-4 outline-none focus:border-gold/60">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Categoría</label>
+      <select id="selMovCategoria" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink mb-4 outline-none focus:border-gold/60 appearance-none">
+        <option>Alimentación</option>
+        <option>Transporte</option>
+        <option>Servicios</option>
+        <option>Deudas</option>
+        <option>Ocio</option>
+        <option>Otros</option>
       </select>
-      
-      <input id="inpManualMonto" type="number" step="0.01" placeholder="Monto (S/)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-3 outline-none">
-      <input id="inpManualDetalle" type="text" placeholder="Concepto o Persona" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-3 outline-none">
-      
-      <select id="inpManualCanal" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[14px] text-ink mb-6 outline-none">
-        <option value="Efectivo">Efectivo</option>
-        <option value="Yape">Yape / Banco</option>
-      </select>
 
-      <button onclick="guardarManual()" id="btnSaveManual" class="w-full py-3.5 rounded-xl bg-gold text-base font-bold">Guardar en Base de Datos</button>
+      <label class="text-[12px] text-ink2 font-medium mb-2 block">Canal</label>
+      <div class="grid grid-cols-2 gap-3 mb-4" id="movCanalToggle">
+        <button type="button" onclick="setMovCanal('Efectivo')" data-canal="Efectivo" class="mov-canal-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Efectivo</button>
+        <button type="button" onclick="setMovCanal('Bancos')" data-canal="Bancos" class="mov-canal-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Bancos / Yape</button>
+      </div>
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Detalle (opcional)</label>
+      <input id="inpMovDetalle" type="text" placeholder="Ej. Almuerzo con cliente" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink2/60 mb-6 outline-none focus:border-gold/60">
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeSheet('sheetMovimiento')" class="py-3.5 rounded-xl bg-surface2 border border-hair text-[14px] font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button>
+        <button onclick="guardarMovimiento()" class="py-3.5 rounded-xl bg-gold text-base text-[14px] font-bold active:scale-95 transition-transform ease-out">Guardar</button>
+      </div>
     </div>
   </div>
 
-  <!-- Config Saldos -->
-  <div id="sheetSaldos" class="sheet-overlay fixed inset-0 bg-black/70 z-50 flex items-end" onclick="if(event.target===this) closeSheet('sheetSaldos')">
-    <div class="sheet-panel w-full bg-surface rounded-t-3xl p-5 safe-bottom">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div>
-      <h3 class="text-[16px] font-semibold mb-4">Saldos Iniciales</h3>
-      <label class="text-[12px] text-ink2 mb-1 block">Bancos / Yape</label>
-      <input id="inpSaldoBanco" type="number" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 mb-3 text-[15px] outline-none">
-      <label class="text-[12px] text-ink2 mb-1 block">Efectivo</label>
-      <input id="inpSaldoEfectivo" type="number" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 mb-6 text-[15px] outline-none">
-      <button onclick="guardarSaldos()" class="w-full py-3.5 rounded-xl bg-gold text-base font-bold">Actualizar Saldos</button>
-    </div>
-  </div>
-
-  <!-- Nuevo Deudor -->
-  <div id="sheetDeudor" class="sheet-overlay fixed inset-0 bg-black/70 z-50 flex items-end" onclick="if(event.target===this) closeSheet('sheetDeudor')">
-    <div class="sheet-panel w-full bg-surface rounded-t-3xl p-5 safe-bottom">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div>
-      <h3 class="text-[16px] font-semibold mb-4">Nuevo Deudor</h3>
-      <input id="inpNombre" type="text" placeholder="Nombre" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 mb-3 text-[15px] outline-none">
-      <input id="inpMonto" type="number" placeholder="Deuda Total (S/)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 mb-6 text-[15px] outline-none">
-      <button onclick="guardarDeudor()" class="w-full py-3.5 rounded-xl bg-gold text-base font-bold">Guardar Deudor</button>
-    </div>
-  </div>
-
-  <!-- TOAST -->
-  <div id="toast" class="toast fixed left-5 right-5 z-50" style="bottom: 100px;">
+  <!-- ===================== TOAST ===================== -->
+  <div id="toast" class="toast fixed left-5 right-5 z-50 max-w-md mx-auto" style="bottom: calc(96px + env(safe-area-inset-bottom, 20px));">
     <div class="bg-surface2 border border-hair rounded-xl px-4 py-3 text-[13.5px] font-medium text-center shadow-lg" id="toastMsg">—</div>
   </div>
 
 </div>
 
 <script>
-/* CONFIGURACIÓN Y ESTADO */
+/* =========================================================
+   CONFIG
+========================================================= */
 const API_URL = 'https://script.google.com/macros/s/AKfycbyh_iugJhbLMZyCPnj43Kn_u8_OAzR4_fLuc4xZPecyE68nkp_fZNfbkj2EGUU0uSF1/exec';
+const LS_KEY = 'finctrl_deudores_v1';
 
 const fmtMoney = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', minimumFractionDigits: 2 });
-const money = n => fmtMoney.format(Number(n) || 0);
+const money = (n) => fmtMoney.format(Number(n) || 0);
 
-let state = {
-  movimientos: [],
-  saldosIniciales: JSON.parse(localStorage.getItem('finctrl_saldos')) || { banco: 0, efectivo: 0 },
-  deudores: JSON.parse(localStorage.getItem('finctrl_deudores')) || [],
-  tarjetas: JSON.parse(localStorage.getItem('finctrl_tc')) || [
-    { id: 1, banco: "BCP Visa", linea: 2000, consumos: 450, cuotas: 150, corte: "15 del mes", pago: "5 del mes" },
-    { id: 2, banco: "Interbank AMEX", linea: 1500, consumos: 0, cuotas: 200, corte: "20 del mes", pago: "10 del mes" }
-  ]
-};
+let transactions = [];
+let deudorPendienteAbonoId = null;
 
-/* NAVEGACIÓN Y TABS */
+/* =========================================================
+   TAB NAVIGATION
+========================================================= */
 function switchTab(tab) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + tab).classList.add('active');
+
   document.querySelectorAll('.navbtn').forEach(btn => {
     const isActive = btn.dataset.tab === tab;
     btn.classList.toggle('active', isActive);
-    btn.querySelector('svg').setAttribute('stroke', isActive ? '#CBA35C' : '#9AA0A8');
+    const svg = btn.querySelector('svg');
+    const label = btn.querySelector('.navlabel');
+    svg.setAttribute('stroke', isActive ? '#CBA35C' : '#9AA0A8');
+    label.classList.toggle('text-gold', isActive);
+    label.classList.toggle('text-ink2', !isActive);
   });
-  
-  const titles = { dashboard: 'Dashboard', cartera: 'Cartera', cxc: 'Cuentas por cobrar', tools: 'Ajustes' };
+
+  const titles = { dashboard: 'Dashboard', cartera: 'Cartera', cxc: 'Cuentas por cobrar', tools: 'Herramientas' };
   document.getElementById('headerTitle').textContent = titles[tab];
-  document.getElementById('fabBtn').style.display = (tab === 'dashboard' || tab === 'cartera') ? 'flex' : 'none';
 
-  if(tab === 'cartera') renderCartera();
-  if(tab === 'cxc') renderDeudores();
+  if (tab === 'cxc') renderDeudores();
+  if (tab === 'cartera') renderCartera();
 }
 
-/* API FETCH (REPARADO) */
-async function fetchTransactions(showMsg = false) {
-  const dot = document.getElementById('statusDot');
-  dot.className = 'w-2.5 h-2.5 rounded-full bg-gold animate-pulse';
-  try {
-    const res = await fetch(API_URL);
-    const raw = await res.json();
-    
-    // Aquí está la solución al error: leer .movimientos
-    state.movimientos = (raw.movimientos || []).map(t => ({
-      id: t.id,
-      fecha: t.fecha,
-      tipo: String(t.tipo || '').toLowerCase(),
-      canal: t.canal || 'Yape',
-      monto: parseFloat(t.monto) || 0,
-      detalle: t.detalle || ''
-    }));
+/* =========================================================
+   GREETING
+========================================================= */
+(function setGreeting() {
+  const h = new Date().getHours();
+  const msg = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+  document.getElementById('greeting').textContent = msg;
+})();
 
-    renderDashboard();
-    renderCartera();
-    dot.className = 'w-2.5 h-2.5 rounded-full bg-up';
-    document.getElementById('lastSync').textContent = 'Actualizado ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    if(showMsg) showToast('Base de datos sincronizada');
-  } catch(e) {
-    dot.className = 'w-2.5 h-2.5 rounded-full bg-down';
-    if(showMsg) showToast('Error de conexión con Sheets');
-  }
-}
-
-/* RENDER DASHBOARD */
-function renderDashboard() {
-  const ingresos = state.movimientos.filter(t => t.tipo.includes('ingreso')).reduce((s, t) => s + t.monto, 0);
-  const gastos = state.movimientos.filter(t => t.tipo.includes('gasto')).reduce((s, t) => s + t.monto, 0);
-  document.getElementById('saldoNeto').textContent = money(ingresos - gastos);
-  document.getElementById('totalIngresos').textContent = money(ingresos);
-  document.getElementById('totalGastos').textContent = money(gastos);
-
-  const list = [...state.movimientos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).slice(0,10);
-  document.getElementById('movList').innerHTML = list.map(t => {
-    const isIng = t.tipo.includes('ingreso');
-    return `
-      <div class="flex items-center justify-between bg-surface border border-hair rounded-xl2 p-3">
-        <div>
-          <p class="text-[13.5px] font-semibold text-ink">${t.detalle}</p>
-          <p class="text-[11px] text-ink2">${t.canal} • ${new Date(t.fecha).toLocaleDateString()}</p>
-        </div>
-        <p class="tabular text-[14px] font-bold ${isIng ? 'text-up' : 'text-down'}">${isIng?'+':'-'} ${money(t.monto)}</p>
-      </div>`;
-  }).join('');
-}
-
-/* RENDER CARTERA (ACTIVOS Y PASIVOS) */
-function renderCartera() {
-  // Activos
-  let mvBanco = 0, mvEfectivo = 0;
-  state.movimientos.forEach(t => {
-    const multiplier = t.tipo.includes('ingreso') ? 1 : -1;
-    if(t.canal.toLowerCase().includes('efectivo')) mvEfectivo += (t.monto * multiplier);
-    else mvBanco += (t.monto * multiplier);
-  });
-
-  document.getElementById('saldoBancos').textContent = money(state.saldosIniciales.banco + mvBanco);
-  document.getElementById('saldoEfectivo').textContent = money(state.saldosIniciales.efectivo + mvEfectivo);
-
-  // Pasivos (Tarjetas)
-  document.getElementById('listaTarjetas').innerHTML = state.tarjetas.map(tc => {
-    const disponible = tc.linea - tc.consumos - tc.cuotas;
-    const pct = Math.min(100, ((tc.consumos + tc.cuotas) / tc.linea) * 100);
-    return `
-      <div class="bg-surface border border-hair rounded-xl2 p-4">
-        <div class="flex justify-between items-center mb-3">
-          <p class="text-[15px] font-bold text-ink">${tc.banco}</p>
-          <p class="text-[12px] px-2 py-1 bg-ccSoft text-cc rounded-lg font-semibold">Línea: ${money(tc.linea)}</p>
-        </div>
-        <div class="flex gap-4 mb-3">
-          <div><p class="text-[11px] text-ink2">Consumos (Mes)</p><p class="text-[14px] font-bold">${money(tc.consumos)}</p></div>
-          <div><p class="text-[11px] text-ink2">Deuda Cuotas</p><p class="text-[14px] font-bold">${money(tc.cuotas)}</p></div>
-        </div>
-        <div class="h-1.5 bg-hair rounded-full overflow-hidden mb-2"><div class="h-full bg-cc rounded-full" style="width:${pct}%"></div></div>
-        <div class="flex justify-between text-[11px] text-ink2">
-          <p>Disponible: <strong class="text-ink">${money(disponible)}</strong></p>
-          <p>Corte: ${tc.corte} | Pago: ${tc.pago}</p>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-/* DEUDORES (LOCAL) Y ELIMINAR */
-function renderDeudores() {
-  const total = state.deudores.reduce((s, d) => s + d.pendiente, 0);
-  document.getElementById('totalPorCobrar').textContent = money(total);
-  document.getElementById('deudoresList').innerHTML = state.deudores.map(d => `
-    <div class="bg-surface border border-hair rounded-xl2 p-4 flex justify-between items-center">
-      <div>
-        <p class="text-[14px] font-bold">${d.nombre}</p>
-        <p class="text-[12px] text-ink2">Pendiente: <strong class="text-gold">${money(d.pendiente)}</strong></p>
-      </div>
-      <button onclick="eliminarDeudor(${d.id})" class="p-2 bg-down/10 text-down rounded-lg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-    </div>
-  `).join('');
-}
-
-function guardarDeudor() {
-  const nombre = document.getElementById('inpNombre').value;
-  const monto = parseFloat(document.getElementById('inpMonto').value);
-  if(!nombre || !monto) return;
-  state.deudores.push({ id: Date.now(), nombre, original: monto, pendiente: monto });
-  localStorage.setItem('finctrl_deudores', JSON.stringify(state.deudores));
-  closeSheet('sheetDeudor'); renderDeudores(); showToast('Deudor guardado');
-}
-
-function eliminarDeudor(id) {
-  if(!confirm('¿Eliminar esta cuenta por cobrar?')) return;
-  state.deudores = state.deudores.filter(d => d.id !== id);
-  localStorage.setItem('finctrl_deudores', JSON.stringify(state.deudores));
-  renderDeudores(); showToast('Deudor eliminado');
-}
-
-/* REGISTRO MANUAL (POST A GOOGLE SHEETS) */
-async function guardarManual() {
-  const btn = document.getElementById('btnSaveManual');
-  const tipo = document.getElementById('inpManualTipo').value;
-  const monto = parseFloat(document.getElementById('inpManualMonto').value);
-  const detalle = document.getElementById('inpManualDetalle').value || 'Manual';
-  const canal = document.getElementById('inpManualCanal').value;
-
-  if(!monto) return showToast('Ingresa un monto');
-
-  btn.textContent = 'Enviando...'; btn.style.opacity = '0.7';
-
-  try {
-    const payload = { tipo, monto, detalle, canal };
-    await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-    
-    // Inserción optimista en pantalla
-    state.movimientos.push({ id: Date.now(), fecha: new Date().toISOString(), ...payload });
-    renderDashboard(); renderCartera();
-    
-    closeSheet('sheetManual');
-    showToast('Guardado en la Base de Datos');
-    document.getElementById('inpManualMonto').value = '';
-    document.getElementById('inpManualDetalle').value = '';
-  } catch (e) {
-    showToast('Error al guardar. Intenta de nuevo.');
-  } finally {
-    btn.textContent = 'Guardar en Base de Datos'; btn.style.opacity = '1';
-  }
-}
-
-/* SALDOS INICIALES */
-function openConfigSaldos() {
-  document.getElementById('inpSaldoBanco').value = state.saldosIniciales.banco;
-  document.getElementById('inpSaldoEfectivo').value = state.saldosIniciales.efectivo;
-  openSheet('sheetSaldos');
-}
-function guardarSaldos() {
-  state.saldosIniciales.banco = parseFloat(document.getElementById('inpSaldoBanco').value) || 0;
-  state.saldosIniciales.efectivo = parseFloat(document.getElementById('inpSaldoEfectivo').value) || 0;
-  localStorage.setItem('finctrl_saldos', JSON.stringify(state.saldosIniciales));
-  closeSheet('sheetSaldos'); renderCartera(); showToast('Saldos iniciales fijados');
-}
-
-/* UI UTILS */
-function openSheet(id) { document.getElementById(id).classList.add('open'); }
-function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+/* =========================================================
+   TOAST
+========================================================= */
+let toastTimer = null;
 function showToast(msg) {
   const el = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
 }
 
-// INICIAR APP
+/* =========================================================
+   DASHBOARD: FETCH + RENDER
+========================================================= */
+async function fetchTransactions(manual = false) {
+  const dot = document.getElementById('statusDot');
+  document.getElementById('dashError').classList.add('hidden');
+  dot.className = 'w-2 h-2 rounded-full bg-gold animate-pulse mr-1';
+  renderMovListSkeleton();
+
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const raw = await res.json();
+    
+    // CORRECCIÓN: Leemos directamente raw.movimientos
+    const list = raw.movimientos || [];
+
+    transactions = list.map(t => {
+      const montoNum = parseFloat(String(t.monto).replace(/[^0-9.-]+/g, "")) || 0;
+      return {
+        id: t.id,
+        fecha: t.fecha,
+        tipo: String(t.tipo || '').toLowerCase(),
+        categoria: t.categoria || 'Sin categoría',
+        monto: montoNum,
+        detalle: t.detalle || '',
+        canal: String(t.canal || t.medio || '').trim()
+      };
+    });
+
+    renderDashboard();
+    renderCartera(); 
+    dot.className = 'w-2 h-2 rounded-full bg-up mr-1';
+    const now = new Date();
+    const stamp = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('lastSync').textContent = 'Actualizado ' + stamp;
+    document.getElementById('toolsLastSync').textContent = 'Última sync: ' + stamp;
+    if (manual) showToast('Datos actualizados');
+  } catch (err) {
+    dot.className = 'w-2 h-2 rounded-full bg-down mr-1';
+    document.getElementById('movList').innerHTML = '';
+    document.getElementById('dashError').classList.remove('hidden');
+    if (manual) showToast('No se pudo actualizar');
+  }
+}
+
+function renderMovListSkeleton() {
+  const el = document.getElementById('movList');
+  el.innerHTML = Array.from({ length: 4 }).map(() =>
+    `<div class="skeleton rounded-xl2 h-[58px]"></div>`
+  ).join('');
+}
+
+function renderDashboard() {
+  const ingresos = transactions.filter(t => t.tipo.includes('ingreso')).reduce((s, t) => s + Math.abs(t.monto), 0);
+  const gastos = transactions.filter(t => t.tipo.includes('gasto')).reduce((s, t) => s + Math.abs(t.monto), 0);
+  const saldo = ingresos - gastos;
+
+  animateNumber('saldoNeto', saldo);
+  document.getElementById('totalIngresos').textContent = money(ingresos);
+  document.getElementById('totalGastos').textContent = money(gastos);
+
+  const sorted = [...transactions].sort((a, b) => parseFecha(b.fecha) - parseFecha(a.fecha));
+  renderMovList(sorted.slice(0, 8));
+}
+
+function parseFecha(f) {
+  const d = new Date(f);
+  return isNaN(d) ? 0 : d.getTime();
+}
+
+function formatFecha(f) {
+  const d = new Date(f);
+  if (isNaN(d)) return f || '';
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+}
+
+function renderMovList(list) {
+  const el = document.getElementById('movList');
+  if (!list.length) {
+    el.innerHTML = `<div class="rounded-xl2 border border-dashed border-hair p-6 text-center text-[13px] text-ink2">Sin movimientos registrados.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(t => {
+    const isIngreso = t.tipo.includes('ingreso');
+    const color = isIngreso ? 'text-up' : 'text-down';
+    const sign = isIngreso ? '+' : '-';
+    const iconBg = isIngreso ? 'bg-up/10' : 'bg-down/10';
+    const arrow = isIngreso
+      ? `<path d="M12 19V5M5 12l7-7 7 7"/>`
+      : `<path d="M12 5v14M5 12l7 7 7-7"/>`;
+    const stroke = isIngreso ? '#3FC17E' : '#E5635C';
+    const titulo = t.detalle && t.detalle.trim() ? t.detalle : (t.categoria || 'Movimiento');
+    const subtitulo = [t.categoria, formatFecha(t.fecha)].filter(Boolean).join(' · ');
+    return `
+      <div class="flex items-center gap-3 bg-surface border border-hair rounded-xl2 px-3.5 py-3">
+        <div class="w-9 h-9 rounded-full ${iconBg} flex items-center justify-center shrink-0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round">${arrow}</svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-semibold truncate">${escapeHtml(titulo)}</p>
+          <p class="text-[11.5px] text-ink2 truncate">${escapeHtml(subtitulo)}</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="tabular text-[13.5px] font-bold ${color}">${sign} ${money(Math.abs(t.monto))}</p>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function animateNumber(elId, target) {
+  const el = document.getElementById(elId);
+  const start = 0;
+  const duration = 700;
+  const t0 = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now - t0) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const val = start + (target - start) * eased;
+    el.textContent = money(val);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = money(target);
+  }
+  requestAnimationFrame(step);
+}
+
+/* =========================================================
+   CUENTAS POR COBRAR (localStorage)
+========================================================= */
+function loadDeudores() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveDeudores(list) {
+  localStorage.setItem(LS_KEY, JSON.stringify(list));
+}
+
+function renderDeudores() {
+  const list = loadDeudores().sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+  const el = document.getElementById('deudoresList');
+  const empty = document.getElementById('cxcEmpty');
+
+  const totalPorCobrar = list.reduce((s, d) => s + (d.estado === 'Saldado' ? 0 : d.saldoPendiente), 0);
+  document.getElementById('totalPorCobrar').textContent = money(totalPorCobrar);
+
+  if (!list.length) {
+    el.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  el.innerHTML = list.map(d => {
+    const pct = d.montoTotal > 0 ? Math.min(100, Math.round(((d.montoTotal - d.saldoPendiente) / d.montoTotal) * 100)) : 100;
+    const saldado = d.estado === 'Saldado';
+    return `
+      <div class="bg-surface border border-hair rounded-xl2 p-4 ${saldado ? 'opacity-60' : ''}">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <p class="text-[14.5px] font-semibold">${escapeHtml(d.nombre)}</p>
+            <p class="text-[11.5px] text-ink2">Monto original: <span class="tabular">${money(d.montoTotal)}</span></p>
+          </div>
+          <span class="text-[10.5px] font-semibold px-2.5 py-1 rounded-full ${saldado ? 'bg-up/15 text-up' : 'bg-goldSoft text-gold'}">${saldado ? 'Saldado' : 'Pendiente'}</span>
+        </div>
+
+        <div class="h-1.5 progress-track rounded-full overflow-hidden mb-3">
+          <div class="h-full ${saldado ? 'bg-up' : 'bg-gold'} rounded-full" style="width:${pct}%"></div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-[11px] text-ink2">Saldo pendiente</p>
+            <p class="tabular text-[17px] font-bold ${saldado ? 'text-ink2' : 'text-ink'}">${money(d.saldoPendiente)}</p>
+          </div>
+          ${saldado ? '' : `
+          <button onclick="abrirAbono('${d.id}')" class="px-4 py-2.5 rounded-xl bg-gold/15 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform">
+            Registrar abono
+          </button>`}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openNuevoDeudor() {
+  document.getElementById('inpNombre').value = '';
+  document.getElementById('inpMonto').value = '';
+  openSheet('sheetDeudor');
+}
+
+function guardarDeudor() {
+  const nombre = document.getElementById('inpNombre').value.trim();
+  const monto = parseFloat(document.getElementById('inpMonto').value);
+
+  if (!nombre) { showToast('Ingresa el nombre del deudor'); return; }
+  if (!monto || monto <= 0) { showToast('Ingresa un monto válido'); return; }
+
+  const list = loadDeudores();
+  list.push({
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'd_' + Date.now()),
+    nombre,
+    montoTotal: monto,
+    saldoPendiente: monto,
+    estado: 'Pendiente',
+    abonos: [],
+    fechaCreacion: new Date().toISOString()
+  });
+  saveDeudores(list);
+  closeSheet('sheetDeudor');
+  renderDeudores();
+  showToast('Deudor registrado');
+}
+
+function abrirAbono(id) {
+  const list = loadDeudores();
+  const d = list.find(x => x.id === id);
+  if (!d) return;
+  deudorPendienteAbonoId = id;
+  document.getElementById('abonoDeudorNombre').textContent = d.nombre;
+  document.getElementById('abonoSaldoActual').textContent = money(d.saldoPendiente);
+  document.getElementById('inpAbono').value = '';
+  openSheet('sheetAbono');
+}
+
+function confirmarAbono() {
+  const monto = parseFloat(document.getElementById('inpAbono').value);
+  if (!monto || monto <= 0) { showToast('Ingresa un monto válido'); return; }
+
+  const list = loadDeudores();
+  const d = list.find(x => x.id === deudorPendienteAbonoId);
+  if (!d) return;
+
+  d.saldoPendiente = Math.max(0, d.saldoPendiente - monto);
+  d.abonos.push({ monto, fecha: new Date().toISOString() });
+  if (d.saldoPendiente <= 0) d.estado = 'Saldado';
+
+  saveDeudores(list);
+  closeSheet('sheetAbono');
+  renderDeudores();
+  showToast(d.estado === 'Saldado' ? 'Cuenta saldada 🎉' : 'Abono registrado');
+}
+
+/* =========================================================
+   CARTERA: ESTADO Y PERSISTENCIA
+========================================================= */
+const LS_KEY_TARJETAS = 'finctrl_tarjetas_v1';
+const LS_KEY_SALDOS = 'finctrl_saldos_iniciales_v1';
+
+let tarjetaEditandoId = null;
+let movTipoActual = 'Gasto';
+let movCanalActual = 'Efectivo';
+let pagoOrigenActual = 'Efectivo';
+let pagoTarjetaIdActual = null;
+
+function loadTarjetas() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_TARJETAS);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+function saveTarjetas(list) {
+  localStorage.setItem(LS_KEY_TARJETAS, JSON.stringify(list));
+}
+
+function loadSaldosIniciales() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_SALDOS);
+    return raw ? JSON.parse(raw) : { efectivo: 0, bancos: 0 };
+  } catch (e) { return { efectivo: 0, bancos: 0 }; }
+}
+function saveSaldosIniciales(obj) {
+  localStorage.setItem(LS_KEY_SALDOS, JSON.stringify(obj));
+}
+
+/* =========================================================
+   CARTERA: CÁLCULO DE SALDOS (ACTIVOS)
+========================================================= */
+function computeSaldosActivos() {
+  const iniciales = loadSaldosIniciales();
+  let efectivo = Number(iniciales.efectivo) || 0;
+  let bancos = Number(iniciales.bancos) || 0;
+
+  transactions.forEach(t => {
+    const signo = t.tipo.includes('ingreso') ? 1 : -1;
+    const monto = Math.abs(t.monto) * signo;
+    const canal = (t.canal || '').toLowerCase();
+    if (canal.includes('efectivo')) efectivo += monto;
+    else bancos += monto;
+  });
+
+  return { efectivo, bancos };
+}
+
+/* =========================================================
+   CARTERA: RENDER PRINCIPAL
+========================================================= */
+function renderCartera() {
+  const { efectivo, bancos } = computeSaldosActivos();
+  const elEf = document.getElementById('saldoEfectivo');
+  const elBc = document.getElementById('saldoBancos');
+  if (elEf) elEf.textContent = money(efectivo);
+  if (elBc) elBc.textContent = money(bancos);
+
+  renderTarjetas();
+}
+
+/* =========================================================
+   CARTERA: SALDO INICIAL (EFECTIVO / BANCOS)
+========================================================= */
+function abrirEditarSaldo(tipo) {
+  const iniciales = loadSaldosIniciales();
+  document.getElementById('saldoInicialTipo').value = tipo;
+  document.getElementById('saldoInicialTitulo').textContent = tipo === 'efectivo' ? 'Saldo inicial de efectivo' : 'Saldo inicial de bancos';
+  document.getElementById('inpSaldoInicial').value = iniciales[tipo] || '';
+  openSheet('sheetSaldoInicial');
+}
+
+function guardarSaldoInicial() {
+  const tipo = document.getElementById('saldoInicialTipo').value;
+  const monto = parseFloat(document.getElementById('inpSaldoInicial').value);
+  if (isNaN(monto)) { showToast('Ingresa un monto válido'); return; }
+
+  const iniciales = loadSaldosIniciales();
+  iniciales[tipo] = monto;
+  saveSaldosIniciales(iniciales);
+  closeSheet('sheetSaldoInicial');
+  renderCartera();
+  showToast('Saldo inicial actualizado');
+}
+
+/* =========================================================
+   CARTERA: TARJETAS DE CRÉDITO (PASIVOS)
+========================================================= */
+function bankStyle(nombre) {
+  const n = (nombre || '').toLowerCase();
+  if (n.includes('bcp')) return 'linear-gradient(135deg, #0B3B8C 0%, #0B3B8C 55%, #E8720C 130%)';
+  if (n.includes('interbank')) return 'linear-gradient(135deg, #0E5A3A 0%, #12734A 55%, #1FAE6B 130%)';
+  if (n.includes('bbva')) return 'linear-gradient(135deg, #001A4D 0%, #052A72 55%, #0C43A6 130%)';
+  if (n.includes('scotiabank') || n.includes('scotia')) return 'linear-gradient(135deg, #7A0C1E 0%, #A5122B 55%, #D91E3A 130%)';
+  return 'linear-gradient(135deg, #1C2025 0%, #22262C 55%, #2A2F36 130%)';
+}
+
+function diasParaPago(diaPago) {
+  const dia = parseInt(diaPago, 10);
+  if (!dia || dia < 1 || dia > 31) return null;
+  const hoy = new Date();
+  let objetivo = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
+  objetivo.setHours(0, 0, 0, 0);
+  const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  if (objetivo < hoySinHora) objetivo = new Date(hoy.getFullYear(), hoy.getMonth() + 1, dia);
+  const diff = Math.round((objetivo - hoySinHora) / 86400000);
+  return diff;
+}
+
+function renderTarjetas() {
+  const list = loadTarjetas();
+  const el = document.getElementById('tarjetasList');
+  const empty = document.getElementById('tarjetasEmpty');
+
+  if (!list.length) {
+    el.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  el.innerHTML = list.map(c => {
+    const linea = Number(c.lineaCredito) || 0;
+    const deuda = Number(c.deudaActual) || 0;
+    const disponible = Math.max(0, linea - deuda);
+    const pct = linea > 0 ? Math.min(100, Math.round((deuda / linea) * 100)) : 0;
+    const barColor = pct >= 90 ? '#E5635C' : (pct >= 60 ? '#CBA35C' : '#3FC17E');
+    const dias = diasParaPago(c.diaPago);
+    let diasTxt = '';
+    if (dias !== null) diasTxt = dias === 0 ? 'Vence hoy' : dias === 1 ? 'Vence mañana' : `Faltan ${dias} días`;
+
+    return `
+      <div class="credit-card rounded-xl2 p-4 text-white" style="background:${bankStyle(c.nombre)}">
+        <div class="flex items-start justify-between mb-4 relative z-10">
+          <div>
+            <p class="text-[14.5px] font-bold">${escapeHtml(c.nombre)}</p>
+            <p class="text-[11px] text-white/70">Cierre: día ${escapeHtml(String(c.diaCierre || '—'))} · Pago: día ${escapeHtml(String(c.diaPago || '—'))}</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="openNuevaTarjeta('${c.id}')" class="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center active:scale-90 transition-transform ease-out">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"/></svg>
+            </button>
+            <button onclick="eliminarTarjeta('${c.id}')" class="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center active:scale-90 transition-transform ease-out">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="relative z-10 mb-3">
+          <div class="flex items-end justify-between mb-1.5">
+            <p class="text-[11px] text-white/70">Deuda a la fecha</p>
+            ${diasTxt ? `<span class="text-[10.5px] font-semibold bg-white/15 px-2 py-0.5 rounded-full">${diasTxt}</span>` : ''}
+          </div>
+          <p class="tabular text-[22px] font-extrabold leading-none">${money(deuda)}</p>
+          ${c.pagoMes ? `<p class="text-[11.5px] text-white/80 mt-1">Cuota del mes: <span class="font-semibold">${money(c.pagoMes)}</span></p>` : ''}
+        </div>
+
+        <div class="h-1.5 rounded-full overflow-hidden mb-1.5 relative z-10" style="background:rgba(255,255,255,0.18)">
+          <div class="h-full rounded-full" style="width:${pct}%; background:${barColor}"></div>
+        </div>
+        <div class="flex items-center justify-between mb-4 relative z-10">
+          <p class="text-[10.5px] text-white/70">Disponible: <span class="font-semibold">${money(disponible)}</span></p>
+          <p class="text-[10.5px] text-white/70">Línea: <span class="font-semibold">${money(linea)}</span></p>
+        </div>
+
+        <button onclick="abrirPagoTarjeta('${c.id}')" class="relative z-10 w-full py-2.5 rounded-xl bg-white/15 text-[13px] font-semibold active:scale-95 transition-transform ease-out">
+          Pagar tarjeta
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function openNuevaTarjeta(id) {
+  tarjetaEditandoId = id || null;
+  document.getElementById('tarjetaEditId').value = id || '';
+
+  if (id) {
+    const c = loadTarjetas().find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('tarjetaSheetTitle').textContent = 'Editar tarjeta';
+    document.getElementById('inpTarjNombre').value = c.nombre || '';
+    document.getElementById('inpTarjLinea').value = c.lineaCredito || '';
+    document.getElementById('inpTarjDeuda').value = c.deudaActual || '';
+    document.getElementById('inpTarjPagoMes').value = c.pagoMes || '';
+    document.getElementById('inpTarjCierre').value = c.diaCierre || '';
+    document.getElementById('inpTarjPago').value = c.diaPago || '';
+  } else {
+    document.getElementById('tarjetaSheetTitle').textContent = 'Nueva tarjeta';
+    document.getElementById('inpTarjNombre').value = '';
+    document.getElementById('inpTarjLinea').value = '';
+    document.getElementById('inpTarjDeuda').value = '';
+    document.getElementById('inpTarjPagoMes').value = '';
+    document.getElementById('inpTarjCierre').value = '';
+    document.getElementById('inpTarjPago').value = '';
+  }
+  openSheet('sheetTarjeta');
+}
+
+function guardarTarjeta() {
+  const nombre = document.getElementById('inpTarjNombre').value.trim();
+  const lineaCredito = parseFloat(document.getElementById('inpTarjLinea').value);
+  const deudaActual = parseFloat(document.getElementById('inpTarjDeuda').value);
+  const pagoMesRaw = document.getElementById('inpTarjPagoMes').value;
+  const pagoMes = pagoMesRaw ? parseFloat(pagoMesRaw) : null;
+  const diaCierre = parseInt(document.getElementById('inpTarjCierre').value, 10) || null;
+  const diaPago = parseInt(document.getElementById('inpTarjPago').value, 10) || null;
+
+  if (!nombre) { showToast('Ingresa el nombre del banco/tarjeta'); return; }
+  if (isNaN(lineaCredito) || lineaCredito <= 0) { showToast('Ingresa una línea de crédito válida'); return; }
+  if (isNaN(deudaActual) || deudaActual < 0) { showToast('Ingresa la deuda actual'); return; }
+
+  const list = loadTarjetas();
+  const editId = document.getElementById('tarjetaEditId').value;
+
+  if (editId) {
+    const idx = list.findIndex(x => x.id === editId);
+    if (idx !== -1) list[idx] = { ...list[idx], nombre, lineaCredito, deudaActual, pagoMes, diaCierre, diaPago };
+  } else {
+    list.push({
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'tc_' + Date.now()),
+      nombre, lineaCredito, deudaActual, pagoMes, diaCierre, diaPago
+    });
+  }
+
+  saveTarjetas(list);
+  closeSheet('sheetTarjeta');
+  renderTarjetas();
+  showToast(editId ? 'Tarjeta actualizada' : 'Tarjeta añadida');
+}
+
+function eliminarTarjeta(id) {
+  if (!confirm('¿Eliminar esta tarjeta? Esta acción no se puede deshacer.')) return;
+  const list = loadTarjetas().filter(x => x.id !== id);
+  saveTarjetas(list);
+  renderTarjetas();
+  showToast('Tarjeta eliminada');
+}
+
+/* =========================================================
+   CARTERA: PAGAR TARJETA (descuenta deuda + registra Gasto en la API)
+========================================================= */
+function setPagoOrigen(origen) {
+  pagoOrigenActual = origen;
+  document.querySelectorAll('.pago-origen-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.origen === origen);
+  });
+}
+
+function abrirPagoTarjeta(id) {
+  const c = loadTarjetas().find(x => x.id === id);
+  if (!c) return;
+  pagoTarjetaIdActual = id;
+  document.getElementById('pagoTarjId').value = id;
+  document.getElementById('pagoTarjNombre').textContent = `${c.nombre} · Deuda actual: ${money(c.deudaActual)}`;
+  document.getElementById('inpPagoMonto').value = '';
+  setPagoOrigen('Efectivo');
+  openSheet('sheetPagoTarjeta');
+}
+
+async function confirmarPagoTarjeta() {
+  const monto = parseFloat(document.getElementById('inpPagoMonto').value);
+  if (!monto || monto <= 0) { showToast('Ingresa un monto válido'); return; }
+
+  const list = loadTarjetas();
+  const c = list.find(x => x.id === pagoTarjetaIdActual);
+  if (!c) return;
+
+  c.deudaActual = Math.max(0, (Number(c.deudaActual) || 0) - monto);
+  saveTarjetas(list);
+  closeSheet('sheetPagoTarjeta');
+  renderTarjetas();
+  showToast('Pago registrado localmente. Sincronizando con la hoja…');
+
+  const ok = await guardarManual({
+    tipo: 'Gasto',
+    monto: monto,
+    categoria: 'Deudas',
+    canal: pagoOrigenActual,
+    detalle: `Pago TC ${c.nombre}`,
+    fecha: new Date().toISOString()
+  });
+
+  if (ok) {
+    showToast('Pago registrado en la hoja de cálculo');
+    fetchTransactions();
+  } else {
+    showToast('La deuda se actualizó, pero no se pudo registrar el gasto en la hoja');
+  }
+}
+
+/* =========================================================
+   MOVIMIENTO MANUAL (Dashboard: botón +)
+========================================================= */
+function setMovTipo(tipo) {
+  movTipoActual = tipo;
+  document.querySelectorAll('.mov-tipo-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === tipo));
+}
+function setMovCanal(canal) {
+  movCanalActual = canal;
+  document.querySelectorAll('.mov-canal-btn').forEach(b => b.classList.toggle('active', b.dataset.canal === canal));
+}
+
+function openMovimiento() {
+  document.getElementById('inpMovMonto').value = '';
+  document.getElementById('inpMovDetalle').value = '';
+  document.getElementById('selMovCategoria').selectedIndex = 0;
+  setMovTipo('Gasto');
+  setMovCanal('Efectivo');
+  openSheet('sheetMovimiento');
+}
+
+async function guardarMovimiento() {
+  const monto = parseFloat(document.getElementById('inpMovMonto').value);
+  const categoria = document.getElementById('selMovCategoria').value;
+  const detalle = document.getElementById('inpMovDetalle').value.trim();
+
+  if (!monto || monto <= 0) { showToast('Ingresa un monto válido'); return; }
+
+  const payload = {
+    tipo: movTipoActual,
+    monto: monto,
+    categoria: categoria,
+    canal: movCanalActual,
+    detalle: detalle,
+    fecha: new Date().toISOString()
+  };
+
+  showToast('Guardando movimiento…');
+  const ok = await guardarManual(payload);
+
+  if (ok) {
+    closeSheet('sheetMovimiento');
+    showToast('Movimiento registrado');
+    fetchTransactions();
+  } else {
+    showToast('No se pudo registrar el movimiento');
+  }
+}
+
+/* =========================================================
+   guardarManual: POST del movimiento a la API (Google Apps Script)
+   NOTA: no existía en el archivo original. Se crea aquí siguiendo
+   exactamente el contrato solicitado (misma API_URL, sin tocar
+   fetchTransactions más allá de capturar "canal" y refrescar Cartera).
+   Si tu doPost espera otro Content-Type o forma de payload, ajusta
+   solo esta función — el resto de la app no depende de su formato interno.
+========================================================= */
+async function guardarManual(payload) {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return true;
+  } catch (err) {
+    console.error('guardarManual error:', err);
+    return false;
+  }
+}
+
+/* =========================================================
+   HERRAMIENTAS
+========================================================= */
+function exportarDeudoresJSON() {
+  const list = loadDeudores();
+  if (!list.length) { showToast('No hay deudores para exportar'); return; }
+
+  const blob = new Blob([JSON.stringify(list, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `cuentas_por_cobrar_backup_${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Backup descargado');
+}
+
+/* =========================================================
+   SHEETS (modals)
+========================================================= */
+function openSheet(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* =========================================================
+   UTIL
+========================================================= */
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+/* =========================================================
+   INIT
+========================================================= */
 fetchTransactions();
+renderDeudores();
+renderCartera();
 </script>
 </body>
 </html>
