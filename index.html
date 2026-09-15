@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Control Financiero</title>
 
 <!-- iOS PWA -->
@@ -47,8 +47,8 @@
   * { -webkit-tap-highlight-color: transparent; }
   body { font-family: 'Inter', system-ui, sans-serif; }
   .tabular { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-  .safe-top { padding-top: env(safe-area-inset-top); }
-  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-top { padding-top: env(safe-area-inset-top, 24px); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
   ::-webkit-scrollbar { display: none; }
   .scrollbar-none { scrollbar-width: none; }
 
@@ -56,8 +56,8 @@
   .view.active { display: block; animation: fadeIn .28s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-  .sheet-overlay { opacity: 0; pointer-events: none; transition: opacity .25s ease; }
-  .sheet-overlay.open { opacity: 1; pointer-events: auto; }
+  .sheet-overlay { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .25s ease, visibility 0s linear .25s; }
+  .sheet-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .25s ease, visibility 0s linear; }
   .sheet-panel { transform: translateY(100%); transition: transform .32s cubic-bezier(.22,1,.36,1); }
   .sheet-overlay.open .sheet-panel { transform: translateY(0); }
 
@@ -68,8 +68,8 @@
   .skeleton { background: linear-gradient(90deg, #1C2025 25%, #232830 37%, #1C2025 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
   @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 
-  .toast { transform: translateY(120%); transition: transform .3s cubic-bezier(.22,1,.36,1); }
-  .toast.show { transform: translateY(0); }
+  .toast { transform: translateY(120%); opacity: 0; visibility: hidden; transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease, visibility 0s linear .3s; }
+  .toast.show { transform: translateY(0); opacity: 1; visibility: visible; transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease, visibility 0s linear; }
 
   input[type="text"], input[type="number"] { -webkit-appearance: none; }
   .progress-track { background: #262B31; }
@@ -90,7 +90,7 @@
   </header>
 
   <!-- ===================== MAIN SCROLL AREA ===================== -->
-  <main class="flex-1 overflow-y-auto scrollbar-none px-5 pb-28 pt-2">
+  <main class="flex-1 overflow-y-auto scrollbar-none px-5 pb-32 pt-2">
 
     <!-- ---------- VIEW 1: DASHBOARD ---------- -->
     <section id="view-dashboard" class="view active">
@@ -250,7 +250,7 @@
   </div>
 
   <!-- ===================== TOAST ===================== -->
-  <div id="toast" class="toast fixed left-5 right-5 z-50 max-w-md mx-auto" style="bottom: calc(96px + env(safe-area-inset-bottom));">
+  <div id="toast" class="toast fixed left-5 right-5 z-50 max-w-md mx-auto" style="bottom: calc(96px + env(safe-area-inset-bottom, 20px));">
     <div class="bg-surface2 border border-hair rounded-xl px-4 py-3 text-[13.5px] font-medium text-center shadow-lg" id="toastMsg">—</div>
   </div>
 
@@ -328,14 +328,17 @@ async function fetchTransactions(manual = false) {
     const raw = await res.json();
     const list = Array.isArray(raw) ? raw : (Array.isArray(raw.data) ? raw.data : []);
 
-    transactions = list.map(t => ({
-      id: t.id,
-      fecha: t.fecha,
-      tipo: String(t.tipo || '').toLowerCase(),
-      categoria: t.categoria || 'Sin categoría',
-      monto: Number(t.monto) || 0,
-      detalle: t.detalle || ''
-    }));
+    transactions = list.map(t => {
+      const montoNum = parseFloat(String(t.monto).replace(/[^0-9.-]+/g, "")) || 0;
+      return {
+        id: t.id,
+        fecha: t.fecha,
+        tipo: String(t.tipo || '').toLowerCase(),
+        categoria: t.categoria || 'Sin categoría',
+        monto: montoNum,
+        detalle: t.detalle || ''
+      };
+    });
 
     renderDashboard();
     dot.className = 'w-2 h-2 rounded-full bg-up mr-1';
@@ -360,8 +363,8 @@ function renderMovListSkeleton() {
 }
 
 function renderDashboard() {
-  const ingresos = transactions.filter(t => t.tipo.includes('ingreso')).reduce((s, t) => s + t.monto, 0);
-  const gastos = transactions.filter(t => t.tipo.includes('gasto')).reduce((s, t) => s + t.monto, 0);
+  const ingresos = transactions.filter(t => t.tipo.includes('ingreso')).reduce((s, t) => s + Math.abs(t.monto), 0);
+  const gastos = transactions.filter(t => t.tipo.includes('gasto')).reduce((s, t) => s + Math.abs(t.monto), 0);
   const saldo = ingresos - gastos;
 
   animateNumber('saldoNeto', saldo);
@@ -392,24 +395,25 @@ function renderMovList(list) {
   el.innerHTML = list.map(t => {
     const isIngreso = t.tipo.includes('ingreso');
     const color = isIngreso ? 'text-up' : 'text-down';
-    const sign = isIngreso ? '+' : '−';
+    const sign = isIngreso ? '+' : '-';
     const iconBg = isIngreso ? 'bg-up/10' : 'bg-down/10';
     const arrow = isIngreso
       ? `<path d="M12 19V5M5 12l7-7 7 7"/>`
       : `<path d="M12 5v14M5 12l7 7 7-7"/>`;
     const stroke = isIngreso ? '#3FC17E' : '#E5635C';
+    const titulo = t.detalle && t.detalle.trim() ? t.detalle : (t.categoria || 'Movimiento');
+    const subtitulo = [t.categoria, formatFecha(t.fecha)].filter(Boolean).join(' · ');
     return `
       <div class="flex items-center gap-3 bg-surface border border-hair rounded-xl2 px-3.5 py-3">
         <div class="w-9 h-9 rounded-full ${iconBg} flex items-center justify-center shrink-0">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round">${arrow}</svg>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13.5px] font-semibold truncate">${escapeHtml(t.categoria)}</p>
-          <p class="text-[11.5px] text-ink2 truncate">${escapeHtml(t.detalle || formatFecha(t.fecha))}</p>
+          <p class="text-[13.5px] font-semibold truncate">${escapeHtml(titulo)}</p>
+          <p class="text-[11.5px] text-ink2 truncate">${escapeHtml(subtitulo)}</p>
         </div>
         <div class="text-right shrink-0">
           <p class="tabular text-[13.5px] font-bold ${color}">${sign} ${money(Math.abs(t.monto))}</p>
-          <p class="text-[11px] text-ink2">${formatFecha(t.fecha)}</p>
         </div>
       </div>`;
   }).join('');
