@@ -64,13 +64,13 @@
   .toast { transform: translateY(120%); opacity: 0; visibility: hidden; transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease, visibility 0s linear .3s; }
   .toast.show { transform: translateY(0); opacity: 1; visibility: visible; transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease, visibility 0s linear; }
 
-  input[type="text"], input[type="number"] { -webkit-appearance: none; }
+  input[type="text"], input[type="number"], input[type="date"] { -webkit-appearance: none; }
+  input[type="date"] { color-scheme: dark; }
   .progress-track { background: #262B31; }
 
-  .mov-tipo-btn, .mov-canal-btn, .pago-origen-btn { background: #1C2025; border-color: #262B31; color: #9AA0A8; }
+  .mov-tipo-btn, .pago-origen-btn { background: #1C2025; border-color: #262B31; color: #9AA0A8; }
   .mov-tipo-btn.active[data-tipo="Ingreso"] { background: rgba(63,193,126,0.14); border-color: #3FC17E; color: #3FC17E; }
   .mov-tipo-btn.active[data-tipo="Gasto"] { background: rgba(229,99,92,0.14); border-color: #E5635C; color: #E5635C; }
-  .mov-canal-btn.active, .pago-origen-btn.active { background: rgba(203,163,92,0.14); border-color: #CBA35C; color: #CBA35C; }
 
   .credit-card { position: relative; overflow: hidden; }
   .credit-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 55%); pointer-events: none; }
@@ -95,19 +95,24 @@
 
     <!-- VIEW 1: DASHBOARD -->
     <section id="view-dashboard" class="view active">
-      <div class="relative rounded-xl2 border border-hair bg-gradient-to-b from-surface2 to-surface p-5 overflow-hidden mb-4">
+      <!-- Tarjeta hero: min-h fija + flex-shrink-0 para que NUNCA salte de tamaño mientras carga -->
+      <div class="relative rounded-xl2 border border-hair bg-gradient-to-b from-surface2 to-surface p-5 overflow-hidden mb-4 min-h-[196px] flex-shrink-0 flex flex-col justify-between">
         <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gold/10 blur-3xl"></div>
-        <p class="text-[12.5px] text-ink2 font-medium mb-1">Saldo neto</p>
-        <p class="tabular text-[36px] font-extrabold leading-none" id="saldoNeto">S/ 0.00</p>
-        <div class="h-px bg-hair my-4"></div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span class="text-[12px] text-ink2 font-medium">Ingresos</span></div>
-            <p class="tabular text-[18px] font-bold text-up" id="totalIngresos">S/ 0.00</p>
-          </div>
-          <div>
-            <div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E5635C" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span class="text-[12px] text-ink2 font-medium">Gastos</span></div>
-            <p class="tabular text-[18px] font-bold text-down" id="totalGastos">S/ 0.00</p>
+        <div>
+          <p class="text-[12.5px] text-ink2 font-medium mb-1">Patrimonio neto</p>
+          <p class="tabular text-[36px] font-extrabold leading-none" id="saldoNeto">S/ 0.00</p>
+        </div>
+        <div>
+          <div class="h-px bg-hair my-4"></div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span class="text-[12px] text-ink2 font-medium">Ingresos</span></div>
+              <p class="tabular text-[18px] font-bold text-up" id="totalIngresos">S/ 0.00</p>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E5635C" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span class="text-[12px] text-ink2 font-medium">Gastos</span></div>
+              <p class="tabular text-[18px] font-bold text-down" id="totalGastos">S/ 0.00</p>
+            </div>
           </div>
         </div>
       </div>
@@ -115,7 +120,7 @@
         <h2 class="text-[14.5px] font-semibold">Últimos movimientos</h2>
         <span class="text-[11.5px] text-ink2" id="lastSync">—</span>
       </div>
-      <div id="movList" class="space-y-2"></div>
+      <div id="movList" class="space-y-2 min-h-[128px]"></div>
       <div id="dashError" class="hidden mt-4 rounded-xl2 border border-hair bg-surface p-5 text-center">
         <p class="text-[13.5px] text-ink2 mb-3">No se pudo cargar la data. Revisa tu conexión.</p>
         <button onclick="fetchTransactions()" class="px-4 py-2 rounded-xl bg-gold/15 text-gold text-[13px] font-semibold">Reintentar</button>
@@ -124,26 +129,13 @@
 
     <!-- VIEW 2: CARTERA -->
     <section id="view-cartera" class="view">
-      <!-- ACTIVOS -->
-      <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide mb-2.5">Activos</h2>
-      <div class="grid grid-cols-2 gap-3 mb-6">
-        <div class="rounded-xl2 border border-hair bg-surface p-4">
-          <div class="flex items-center justify-between mb-3">
-            <div class="w-8 h-8 rounded-full bg-up/10 flex items-center justify-center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></div>
-            <button onclick="abrirEditarSaldo('efectivo')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-          </div>
-          <p class="text-[11.5px] text-ink2 font-medium mb-0.5">Efectivo</p>
-          <p class="tabular text-[16.5px] font-extrabold leading-tight" id="saldoEfectivo">S/ 0.00</p>
-        </div>
-        <div class="rounded-xl2 border border-hair bg-surface p-4">
-          <div class="flex items-center justify-between mb-3">
-            <div class="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg></div>
-            <button onclick="abrirEditarSaldo('bancos')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-          </div>
-          <p class="text-[11.5px] text-ink2 font-medium mb-0.5">Bancos / Yape</p>
-          <p class="tabular text-[16.5px] font-extrabold leading-tight" id="saldoBancos">S/ 0.00</p>
-        </div>
+      <!-- MIS CUENTAS (dinámico) -->
+      <div class="flex items-center justify-between mb-2.5">
+        <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Mis cuentas</h2>
+        <button onclick="openNuevaCuenta()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Añadir cuenta</button>
       </div>
+      <div id="cuentasList" class="space-y-2 mb-6"></div>
+      <div id="cuentasEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-6 text-center mb-6"><p class="text-[13.5px] text-ink2">Aún no registras cuentas.<br>Ej. BCP Principal, Caja fuerte, Yape.</p></div>
 
       <!-- MIS BIENES -->
       <div class="flex items-center justify-between mb-2.5">
@@ -235,6 +227,25 @@
     </div>
   </div>
 
+  <!-- Modal Cuenta -->
+  <div id="sheetCuenta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetCuenta')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="cuentaSheetTitle">Nueva cuenta</h3>
+      <input type="hidden" id="cuentaEditId" value="">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Nombre de la cuenta</label>
+      <input id="inpCuentaNombre" type="text" placeholder="Ej. BCP Principal" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none focus:border-gold/60">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Saldo inicial</label>
+      <div class="relative mb-6">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+        <input id="inpCuentaSaldo" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none focus:border-gold/60">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetCuenta')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarCuenta()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
+    </div>
+  </div>
+
   <!-- Modal Tarjeta -->
   <div id="sheetTarjeta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetTarjeta')">
     <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
@@ -269,18 +280,12 @@
 
       <div class="grid grid-cols-2 gap-3 mb-6">
         <div>
-          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Día de cierre</label>
-          <div class="relative">
-            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            <select id="inpTarjCierre" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-3 py-3 text-[15px] outline-none focus:border-gold/60 appearance-none"></select>
-          </div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Fecha de cierre</label>
+          <input id="inpTarjFechaCierre" type="date" class="w-full bg-surface2 border border-hair rounded-xl px-3 py-3 text-[14px] outline-none focus:border-gold/60">
         </div>
         <div>
-          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Día de pago</label>
-          <div class="relative">
-            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            <select id="inpTarjPago" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-3 py-3 text-[15px] outline-none focus:border-gold/60 appearance-none"></select>
-          </div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Fecha de pago</label>
+          <input id="inpTarjFechaPago" type="date" class="w-full bg-surface2 border border-hair rounded-xl px-3 py-3 text-[14px] outline-none focus:border-gold/60">
         </div>
       </div>
 
@@ -290,7 +295,7 @@
 
   <!-- Modal Bien (Activo fijo) -->
   <div id="sheetBien" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetBien')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="bienSheetTitle">Nuevo bien</h3>
       <input type="hidden" id="bienEditId" value="">
 
@@ -298,25 +303,26 @@
       <input id="inpBienNombre" type="text" placeholder="Ej. Laptop MacBook Air" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none focus:border-gold/60">
 
       <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Valor estimado</label>
-      <div class="relative mb-6">
+      <div class="relative mb-4">
         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
         <input id="inpBienValor" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none focus:border-gold/60">
       </div>
 
-      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetBien')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarBien()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
-    </div>
-  </div>
-
-  <!-- Modal Saldo Inicial -->
-  <div id="sheetSaldoInicial" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetSaldoInicial')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="saldoInicialTitulo">Saldo inicial</h3>
-      <input type="hidden" id="saldoInicialTipo" value="">
-      <div class="relative mb-6">
-        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
-        <input id="inpSaldoInicial" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none">
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Fecha de adquisición</label>
+          <input id="inpBienFecha" type="date" class="w-full bg-surface2 border border-hair rounded-xl px-3 py-3 text-[14px] outline-none focus:border-gold/60">
+        </div>
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Modalidad</label>
+          <select id="inpBienModalidad" class="w-full bg-surface2 border border-hair rounded-xl px-3 py-3 text-[14px] outline-none focus:border-gold/60 appearance-none">
+            <option value="Al contado">Al contado</option>
+            <option value="Al crédito">Al crédito</option>
+          </select>
+        </div>
       </div>
-      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetSaldoInicial')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarSaldoInicial()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
+
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetBien')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarBien()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
     </div>
   </div>
 
@@ -326,14 +332,13 @@
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-1">Pagar tarjeta</h3>
       <p class="text-[13px] text-ink2 mb-4" id="pagoTarjNombre">—</p>
       <input type="hidden" id="pagoTarjId" value="">
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Monto a pagar</label>
       <div class="relative mb-4">
         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
         <input id="inpPagoMonto" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none">
       </div>
-      <div class="grid grid-cols-2 gap-3 mb-6" id="pagoOrigenToggle">
-        <button type="button" onclick="setPagoOrigen('Efectivo')" data-origen="Efectivo" class="pago-origen-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Efectivo</button>
-        <button type="button" onclick="setPagoOrigen('Bancos')" data-origen="Bancos" class="pago-origen-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Bancos / Yape</button>
-      </div>
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Origen de los fondos</label>
+      <select id="selPagoOrigen" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-6 outline-none appearance-none"></select>
       <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetPagoTarjeta')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="confirmarPagoTarjeta()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Pagar</button></div>
     </div>
   </div>
@@ -346,17 +351,17 @@
         <button type="button" onclick="setMovTipo('Ingreso')" data-tipo="Ingreso" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Ingreso</button>
         <button type="button" onclick="setMovTipo('Gasto')" data-tipo="Gasto" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Gasto</button>
       </div>
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Monto</label>
       <div class="relative mb-4">
         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
         <input id="inpMovMonto" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none">
       </div>
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Categoría</label>
       <select id="selMovCategoria" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none appearance-none">
         <option>Alimentación</option><option>Transporte</option><option>Servicios</option><option>Deudas</option><option>Ocio</option><option>Otros</option>
       </select>
-      <div class="grid grid-cols-2 gap-3 mb-4" id="movCanalToggle">
-        <button type="button" onclick="setMovCanal('Efectivo')" data-canal="Efectivo" class="mov-canal-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Efectivo</button>
-        <button type="button" onclick="setMovCanal('Bancos')" data-canal="Bancos" class="mov-canal-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Bancos / Yape</button>
-      </div>
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Cuenta / Canal</label>
+      <select id="selMovCanal" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none appearance-none"></select>
       <input id="inpMovDetalle" type="text" placeholder="Detalle (Opcional)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-6 outline-none">
       <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetMovimiento')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarMovimiento()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
     </div>
@@ -384,8 +389,9 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbyh_iugJhbLMZyCPnj43Kn_u8_OAzR4_fLuc4xZPecyE68nkp_fZNfbkj2EGUU0uSF1/exec';
 const LS_KEY = 'finctrl_deudores_v1';
 const LS_KEY_TARJETAS = 'finctrl_tarjetas_v1';
-const LS_KEY_SALDOS = 'finctrl_saldos_iniciales_v1';
+const LS_KEY_SALDOS = 'finctrl_saldos_iniciales_v1'; /* legado, solo se lee una vez para migrar a Mis Cuentas */
 const LS_KEY_BIENES = 'finctrl_bienes_v1';
+const LS_KEY_CUENTAS = 'finctrl_cuentas_v1';
 
 const fmtMoney = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', minimumFractionDigits: 2 });
 const money = (n) => fmtMoney.format(Number(n) || 0);
@@ -394,9 +400,8 @@ let transactions = [];
 let deudorPendienteAbonoId = null;
 let tarjetaEditandoId = null;
 let bienEditandoId = null;
+let cuentaEditandoId = null;
 let movTipoActual = 'Gasto';
-let movCanalActual = 'Efectivo';
-let pagoOrigenActual = 'Efectivo';
 let pagoTarjetaIdActual = null;
 
 /* =========================================================
@@ -436,6 +441,8 @@ function escapeHtml(str) { return String(str).replaceAll('&', '&amp;').replaceAl
 
 /* =========================================================
    SINCRONIZACIÓN API (LA MAGIA DE LA NUBE) — INTACTO
+   (única variación: el payload de sync_config ahora manda
+   "cuentas" en lugar de "saldosIniciales", tal como se pidió)
 ========================================================= */
 async function syncDeudoresApi() {
   showToast('Guardando deudores en la nube...');
@@ -448,7 +455,7 @@ async function syncDeudoresApi() {
 async function syncConfigApi() {
   showToast('Guardando configuración en la nube...');
   try {
-    await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'sync_config', config: { saldosIniciales: loadSaldosIniciales(), tarjetas: loadTarjetas(), bienes: loadBienes() } }) });
+    await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'sync_config', config: { cuentas: loadCuentas(), tarjetas: loadTarjetas(), bienes: loadBienes() } }) });
   } catch(e) { console.error(e); }
 }
 
@@ -459,9 +466,9 @@ function forceSyncAll() {
 
 /* =========================================================
    DASHBOARD: FETCH + RENDER — LÓGICA DE RED INTACTA
-   (única adición: si raw.config trae "bienes", se hidrata igual
-   que ya se hacía con tarjetas/saldosIniciales, para que la nube
-   sea la fuente de verdad también para Mis Bienes)
+   (única adición: si raw.config trae "cuentas", se hidrata igual
+   que ya se hacía con tarjetas/bienes, para que la nube sea la
+   fuente de verdad también para Mis Cuentas)
 ========================================================= */
 async function fetchTransactions(manual = false) {
   const dot = document.getElementById('statusDot');
@@ -489,10 +496,10 @@ async function fetchTransactions(manual = false) {
       localStorage.setItem(LS_KEY, JSON.stringify(remappedDeud));
     }
 
-    /* LEER TARJETAS, SALDOS Y BIENES DE LA NUBE */
+    /* LEER TARJETAS, CUENTAS Y BIENES DE LA NUBE */
     if (raw.config) {
       if (raw.config.tarjetas) localStorage.setItem(LS_KEY_TARJETAS, JSON.stringify(raw.config.tarjetas));
-      if (raw.config.saldosIniciales) localStorage.setItem(LS_KEY_SALDOS, JSON.stringify(raw.config.saldosIniciales));
+      if (raw.config.cuentas) localStorage.setItem(LS_KEY_CUENTAS, JSON.stringify(raw.config.cuentas));
       if (raw.config.bienes) localStorage.setItem(LS_KEY_BIENES, JSON.stringify(raw.config.bienes));
     }
 
@@ -533,20 +540,41 @@ function renderDashboard() {
         <div class="w-9 h-9 rounded-full ${bg} flex items-center justify-center shrink-0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${stk}" stroke-width="2.4" stroke-linecap="round">${icn}</svg></div>
         <div class="flex-1 min-w-0"><p class="text-[13.5px] font-semibold truncate">${escapeHtml(t.detalle || t.categoria)}</p><p class="text-[11.5px] text-ink2 truncate">${t.categoria} · ${fechaFormat}</p></div>
         <div class="text-right shrink-0"><p class="tabular text-[13.5px] font-bold ${clr}">${isIng?'+':'-'} ${money(Math.abs(t.monto))}</p></div>
+        <button onclick="deleteMovimiento('${t.id}')" class="shrink-0 w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E5635C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+        </button>
       </div>`;
   }).join('');
 }
 
 /* =========================================================
+   ELIMINAR MOVIMIENTO
+========================================================= */
+async function deleteMovimiento(id) {
+  if (!confirm('¿Eliminar este movimiento? Esta acción no se puede deshacer.')) return;
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'delete_movimiento', id: id }) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    transactions = transactions.filter(t => t.id !== id);
+    renderDashboard();
+    renderCartera();
+    showToast('Movimiento eliminado');
+  } catch (err) {
+    console.error('deleteMovimiento error:', err);
+    showToast('No se pudo eliminar el movimiento');
+  }
+}
+
+/* =========================================================
    PATRIMONIO NETO 360°
-   Activos = Efectivo + Bancos + Cuentas por cobrar + Bienes
-   Pasivos = Suma de deudas actuales de tarjetas
+   Activos = Σ saldos de Mis Cuentas + Cuentas por cobrar + Bienes
+   Pasivos = Σ deudas actuales de tarjetas
 ========================================================= */
 function renderPatrimonio() {
-  const { efectivo, bancos } = computeSaldosActivos();
+  const totalCuentas = loadCuentas().reduce((s, c) => s + computeSaldoCuenta(c), 0);
   const totalPorCobrar = loadDeudores().reduce((s, d) => s + (d.estado === 'Saldado' ? 0 : Number(d.saldoPendiente) || 0), 0);
   const totalBienes = loadBienes().reduce((s, b) => s + (Number(b.valor) || 0), 0);
-  const totalActivos = efectivo + bancos + totalPorCobrar + totalBienes;
+  const totalActivos = totalCuentas + totalPorCobrar + totalBienes;
 
   const totalPasivos = loadTarjetas().reduce((s, c) => s + (Number(c.deudaActual) || 0), 0);
 
@@ -620,24 +648,129 @@ function confirmarAbono() {
 }
 
 /* =========================================================
-   CARTERA: SALDOS EFECTIVO / BANCOS
+   MIS CUENTAS (Multi-cuentas dinámicas)
+   Reemplaza la vieja estructura fija Efectivo/Bancos.
+   Migración: si el usuario ya tenía saldos iniciales guardados
+   con la versión anterior de la app y aún no tiene cuentas,
+   se crean automáticamente dos cuentas "Efectivo" y "Bancos"
+   con esos montos, para no perder su información.
 ========================================================= */
-function loadSaldosIniciales() { try { return JSON.parse(localStorage.getItem(LS_KEY_SALDOS)) || { efectivo: 0, bancos: 0 }; } catch(e) { return { efectivo: 0, bancos: 0 }; } }
+function loadCuentas() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_CUENTAS);
+    if (raw) return JSON.parse(raw) || [];
+  } catch(e) {}
 
-function computeSaldosActivos() {
-  const ini = loadSaldosIniciales(); let ef = Number(ini.efectivo)||0; let bc = Number(ini.bancos)||0;
+  // Migración única desde la vieja estructura de saldos iniciales
+  try {
+    const legacyRaw = localStorage.getItem(LS_KEY_SALDOS);
+    if (legacyRaw) {
+      const legacy = JSON.parse(legacyRaw);
+      const migradas = [];
+      if (legacy.efectivo !== undefined) migradas.push({ id: 'ct_efectivo_legacy', nombre: 'Efectivo', saldoInicial: Number(legacy.efectivo) || 0 });
+      if (legacy.bancos !== undefined) migradas.push({ id: 'ct_bancos_legacy', nombre: 'Bancos', saldoInicial: Number(legacy.bancos) || 0 });
+      if (migradas.length) {
+        localStorage.setItem(LS_KEY_CUENTAS, JSON.stringify(migradas));
+        return migradas;
+      }
+    }
+  } catch(e) {}
+
+  return [];
+}
+function saveCuentasLocal(list) { localStorage.setItem(LS_KEY_CUENTAS, JSON.stringify(list)); }
+
+function computeSaldoCuenta(cuenta) {
+  let saldo = Number(cuenta.saldoInicial) || 0;
+  const nombreNorm = (cuenta.nombre || '').trim().toLowerCase();
   transactions.forEach(t => {
-    const sum = t.tipo.includes('ingreso') ? t.monto : -t.monto;
-    if ((t.canal || '').toLowerCase().includes('efectivo')) ef += sum; else bc += sum;
+    const canalNorm = (t.canal || '').trim().toLowerCase();
+    if (canalNorm === nombreNorm) {
+      saldo += t.tipo.includes('ingreso') ? Math.abs(t.monto) : -Math.abs(t.monto);
+    }
   });
-  return { efectivo: ef, bancos: bc };
+  return saldo;
+}
+
+function renderCuentas() {
+  const list = loadCuentas();
+  const el = document.getElementById('cuentasList');
+  const empty = document.getElementById('cuentasEmpty');
+
+  if (!list.length) { el.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  el.innerHTML = list.map(c => {
+    const saldo = computeSaldoCuenta(c);
+    return `
+      <div class="flex items-center gap-3 bg-surface border border-hair rounded-xl2 px-3.5 py-3">
+        <div class="w-9 h-9 rounded-full bg-up/10 flex items-center justify-center shrink-0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+        </div>
+        <div class="flex-1 min-w-0"><p class="text-[13.5px] font-semibold truncate">${escapeHtml(c.nombre)}</p><p class="text-[11.5px] text-ink2">Saldo inicial: ${money(c.saldoInicial)}</p></div>
+        <p class="tabular text-[14.5px] font-bold ${saldo < 0 ? 'text-down' : 'text-ink'} shrink-0">${money(saldo)}</p>
+        <div class="flex items-center gap-1 shrink-0">
+          <button onclick="openNuevaCuenta('${c.id}')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+          <button onclick="eliminarCuenta('${c.id}')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E5635C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openNuevaCuenta(id) {
+  cuentaEditandoId = id || null;
+  document.getElementById('cuentaEditId').value = id || '';
+  if (id) {
+    const c = loadCuentas().find(x => x.id === id); if (!c) return;
+    document.getElementById('cuentaSheetTitle').textContent = 'Editar cuenta';
+    document.getElementById('inpCuentaNombre').value = c.nombre || '';
+    document.getElementById('inpCuentaSaldo').value = c.saldoInicial || '';
+  } else {
+    document.getElementById('cuentaSheetTitle').textContent = 'Nueva cuenta';
+    document.getElementById('inpCuentaNombre').value = '';
+    document.getElementById('inpCuentaSaldo').value = '';
+  }
+  openSheet('sheetCuenta');
+}
+
+function guardarCuenta() {
+  const nombre = document.getElementById('inpCuentaNombre').value.trim();
+  const saldoInicial = parseFloat(document.getElementById('inpCuentaSaldo').value);
+  if (!nombre) return showToast('Ingresa el nombre de la cuenta');
+  if (isNaN(saldoInicial)) return showToast('Ingresa un saldo inicial válido');
+
+  const list = loadCuentas();
+  const editId = document.getElementById('cuentaEditId').value;
+  if (editId) {
+    const i = list.findIndex(x => x.id === editId);
+    if (i > -1) list[i] = { ...list[i], nombre, saldoInicial };
+  } else {
+    list.push({ id: 'ct_' + Date.now(), nombre, saldoInicial });
+  }
+  saveCuentasLocal(list);
+  closeSheet('sheetCuenta');
+  renderCartera();
+  syncConfigApi(); // AUTO-SYNC
+}
+
+function eliminarCuenta(id) {
+  if (!confirm('¿Eliminar esta cuenta? Los movimientos ya registrados con este canal no se eliminarán, pero dejarán de sumarse a ningún saldo.')) return;
+  saveCuentasLocal(loadCuentas().filter(x => x.id !== id));
+  renderCartera();
+  syncConfigApi(); // AUTO-SYNC
+}
+
+function poblarSelectCuentas(selectEl, valorActual) {
+  const cuentas = loadCuentas();
+  if (!cuentas.length) {
+    selectEl.innerHTML = '<option value="">Sin cuentas — créala en Cartera</option>';
+    return;
+  }
+  selectEl.innerHTML = cuentas.map(c => `<option value="${escapeHtml(c.nombre)}" ${c.nombre === valorActual ? 'selected' : ''}>${escapeHtml(c.nombre)}</option>`).join('');
 }
 
 function renderCartera() {
-  const { efectivo, bancos } = computeSaldosActivos();
-  document.getElementById('saldoEfectivo').textContent = money(efectivo);
-  document.getElementById('saldoBancos').textContent = money(bancos);
-
+  renderCuentas();
   renderBienes();
   renderTarjetas();
   renderPatrimonio();
@@ -648,6 +781,13 @@ function renderCartera() {
 ========================================================= */
 function loadBienes() { try { return JSON.parse(localStorage.getItem(LS_KEY_BIENES)) || []; } catch(e) { return []; } }
 function saveBienesLocal(list) { localStorage.setItem(LS_KEY_BIENES, JSON.stringify(list)); }
+
+function formatFechaCorta(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+}
 
 function renderBienes() {
   const list = loadBienes();
@@ -662,7 +802,10 @@ function renderBienes() {
       <div class="w-9 h-9 rounded-full bg-goldSoft flex items-center justify-center shrink-0">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 4v16"/></svg>
       </div>
-      <div class="flex-1 min-w-0"><p class="text-[13.5px] font-semibold truncate">${escapeHtml(b.nombre)}</p><p class="text-[11.5px] text-ink2">Activo fijo</p></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13.5px] font-semibold truncate">${escapeHtml(b.nombre)}</p>
+        <p class="text-[11px] text-ink2 truncate">${b.fechaAdquisicion ? formatFechaCorta(b.fechaAdquisicion) : 'Sin fecha'} · ${escapeHtml(b.modalidad || 'Al contado')}</p>
+      </div>
       <p class="tabular text-[13.5px] font-bold text-gold shrink-0">${money(b.valor)}</p>
       <div class="flex items-center gap-1 shrink-0">
         <button onclick="openNuevoBien('${b.id}')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
@@ -679,10 +822,14 @@ function openNuevoBien(id) {
     document.getElementById('bienSheetTitle').textContent = 'Editar bien';
     document.getElementById('inpBienNombre').value = b.nombre || '';
     document.getElementById('inpBienValor').value = b.valor || '';
+    document.getElementById('inpBienFecha').value = b.fechaAdquisicion || '';
+    document.getElementById('inpBienModalidad').value = b.modalidad || 'Al contado';
   } else {
     document.getElementById('bienSheetTitle').textContent = 'Nuevo bien';
     document.getElementById('inpBienNombre').value = '';
     document.getElementById('inpBienValor').value = '';
+    document.getElementById('inpBienFecha').value = '';
+    document.getElementById('inpBienModalidad').value = 'Al contado';
   }
   openSheet('sheetBien');
 }
@@ -690,21 +837,26 @@ function openNuevoBien(id) {
 function guardarBien() {
   const nombre = document.getElementById('inpBienNombre').value.trim();
   const valor = parseFloat(document.getElementById('inpBienValor').value);
+  const fechaAdquisicion = document.getElementById('inpBienFecha').value;
+  const modalidad = document.getElementById('inpBienModalidad').value;
+
   if (!nombre) return showToast('Ingresa el nombre del bien');
   if (isNaN(valor) || valor <= 0) return showToast('Ingresa un valor válido');
+  if (!fechaAdquisicion) return showToast('Ingresa la fecha de adquisición');
+  if (!modalidad) return showToast('Selecciona la modalidad de compra');
 
   const list = loadBienes();
   const editId = document.getElementById('bienEditId').value;
   if (editId) {
     const i = list.findIndex(x => x.id === editId);
-    if (i > -1) list[i] = { ...list[i], nombre, valor };
+    if (i > -1) list[i] = { ...list[i], nombre, valor, fechaAdquisicion, modalidad };
   } else {
-    list.push({ id: 'bn_' + Date.now(), nombre, valor });
+    list.push({ id: 'bn_' + Date.now(), nombre, valor, fechaAdquisicion, modalidad });
   }
   saveBienesLocal(list);
   closeSheet('sheetBien');
   renderBienes(); renderPatrimonio();
-  syncConfigApi(); // AUTO-SYNC (payload ahora incluye bienes)
+  syncConfigApi(); // AUTO-SYNC
 }
 
 function eliminarBien(id) {
@@ -715,13 +867,21 @@ function eliminarBien(id) {
 }
 
 /* =========================================================
-   TARJETAS DE CRÉDITO (PASIVOS)
+   TARJETAS DE CRÉDITO (PASIVOS) — fechas exactas de vencimiento
 ========================================================= */
 function loadTarjetas() { try { return JSON.parse(localStorage.getItem(LS_KEY_TARJETAS)) || []; } catch(e) { return []; } }
 
-function poblarSelectDias(selectEl, valorActual) {
-  selectEl.innerHTML = '<option value="">Elegir día</option>' + Array.from({ length: 31 }, (_, i) => i + 1)
-    .map(d => `<option value="${d}" ${Number(valorActual) === d ? 'selected' : ''}>Día ${d}</option>`).join('');
+function diasParaVencer(fechaISO) {
+  if (!fechaISO) return { texto: '', estado: 'neutro' };
+  const hoy = new Date(); const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  const objetivo = new Date(fechaISO + 'T00:00:00');
+  if (isNaN(objetivo)) return { texto: '', estado: 'neutro' };
+  const diff = Math.round((objetivo - hoySinHora) / 86400000);
+  if (diff < 0) return { texto: `Vencido hace ${Math.abs(diff)} día${Math.abs(diff)===1?'':'s'}`, estado: 'vencido' };
+  if (diff === 0) return { texto: 'Vence hoy', estado: 'urgente' };
+  if (diff === 1) return { texto: 'Vence mañana', estado: 'urgente' };
+  if (diff <= 5) return { texto: `Faltan ${diff} días`, estado: 'proximo' };
+  return { texto: `Faltan ${diff} días`, estado: 'neutro' };
 }
 
 function renderTarjetas() {
@@ -739,11 +899,16 @@ function renderTarjetas() {
     if(n.includes('interbank')) bg = 'linear-gradient(135deg, #0E5A3A 0%, #12734A 55%, #1FAE6B 130%)';
     if(n.includes('bbva')) bg = 'linear-gradient(135deg, #001A4D 0%, #052A72 55%, #0C43A6 130%)';
     if(n.includes('scotiabank') || n.includes('scotia')) bg = 'linear-gradient(135deg, #7A0C1E 0%, #A5122B 55%, #D91E3A 130%)';
-    const diasTxt = diasParaPago(c.diaPago);
+
+    const venc = diasParaVencer(c.fechaPago);
+    const badgeColor = venc.estado === 'vencido' ? 'background:rgba(229,99,92,0.9)' : venc.estado === 'urgente' ? 'background:rgba(229,99,92,0.55)' : venc.estado === 'proximo' ? 'background:rgba(203,163,92,0.55)' : 'background:rgba(255,255,255,0.15)';
+    const cierreTxt = c.fechaCierre ? formatFechaCorta(c.fechaCierre) : '—';
+    const pagoTxt = c.fechaPago ? formatFechaCorta(c.fechaPago) : '—';
+
     return `
       <div class="credit-card rounded-xl2 p-4 text-white shadow-lg" style="background:${bg}">
         <div class="flex items-start justify-between mb-4 relative z-10">
-          <div><p class="text-[14.5px] font-bold">${escapeHtml(c.nombre)}</p><p class="text-[11px] text-white/70">Cierre: día ${c.diaCierre||'—'} · Pago: día ${c.diaPago||'—'}</p></div>
+          <div><p class="text-[14.5px] font-bold">${escapeHtml(c.nombre)}</p><p class="text-[11px] text-white/70">Cierre: ${cierreTxt} · Pago: ${pagoTxt}</p></div>
           <div class="flex gap-1">
             <button onclick="openNuevaTarjeta('${c.id}')" class="w-7 h-7 bg-white/15 rounded-full flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
             <button onclick="eliminarTarjeta('${c.id}')" class="w-7 h-7 bg-white/15 rounded-full flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
@@ -752,7 +917,7 @@ function renderTarjetas() {
         <div class="relative z-10 mb-3">
           <div class="flex items-end justify-between mb-1">
             <p class="text-[11px] text-white/70">Deuda actual</p>
-            ${diasTxt ? `<span class="text-[10.5px] font-semibold bg-white/15 px-2 py-0.5 rounded-full">${diasTxt}</span>` : ''}
+            ${venc.texto ? `<span class="text-[10.5px] font-semibold px-2 py-0.5 rounded-full" style="${badgeColor}">${venc.texto}</span>` : ''}
           </div>
           <p class="tabular text-[22px] font-extrabold leading-none">${money(deu)}</p>
           ${c.pagoMes ? `<p class="text-[11.5px] text-white/80 mt-1">Cuota del mes: <span class="font-semibold">${money(c.pagoMes)}</span></p>` : ''}
@@ -764,42 +929,20 @@ function renderTarjetas() {
   }).join('');
 }
 
-function diasParaPago(diaPago) {
-  const dia = parseInt(diaPago, 10);
-  if (!dia || dia < 1 || dia > 31) return '';
-  const hoy = new Date();
-  const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-  let objetivo = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
-  if (objetivo < hoySinHora) objetivo = new Date(hoy.getFullYear(), hoy.getMonth() + 1, dia);
-  const diff = Math.round((objetivo - hoySinHora) / 86400000);
-  return diff === 0 ? 'Vence hoy' : diff === 1 ? 'Vence mañana' : `Faltan ${diff} días`;
-}
-
-function abrirEditarSaldo(t) {
-  document.getElementById('saldoInicialTipo').value = t; document.getElementById('saldoInicialTitulo').textContent = t === 'efectivo' ? 'Saldo Efectivo' : 'Saldo Bancos';
-  document.getElementById('inpSaldoInicial').value = loadSaldosIniciales()[t] || ''; openSheet('sheetSaldoInicial');
-}
-function guardarSaldoInicial() {
-  const t = document.getElementById('saldoInicialTipo').value; const m = parseFloat(document.getElementById('inpSaldoInicial').value);
-  if(isNaN(m)) return showToast('Inválido');
-  const o = loadSaldosIniciales(); o[t] = m; localStorage.setItem(LS_KEY_SALDOS, JSON.stringify(o));
-  closeSheet('sheetSaldoInicial'); renderCartera(); syncConfigApi(); // AUTO-SYNC
-}
-
 function openNuevaTarjeta(id) {
   document.getElementById('tarjetaEditId').value = id || '';
-  const selCierre = document.getElementById('inpTarjCierre');
-  const selPago = document.getElementById('inpTarjPago');
   if (id) {
     const c = loadTarjetas().find(x => x.id === id); if(!c) return;
     document.getElementById('tarjetaSheetTitle').textContent = 'Editar tarjeta';
     document.getElementById('inpTarjNombre').value = c.nombre||''; document.getElementById('inpTarjLinea').value = c.lineaCredito||'';
     document.getElementById('inpTarjDeuda').value = c.deudaActual||''; document.getElementById('inpTarjPagoMes').value = c.pagoMes||'';
-    poblarSelectDias(selCierre, c.diaCierre); poblarSelectDias(selPago, c.diaPago);
+    document.getElementById('inpTarjFechaCierre').value = c.fechaCierre || '';
+    document.getElementById('inpTarjFechaPago').value = c.fechaPago || '';
   } else {
     document.getElementById('tarjetaSheetTitle').textContent = 'Nueva tarjeta';
     ['Nombre','Linea','Deuda','PagoMes'].forEach(i => document.getElementById('inpTarj'+i).value = '');
-    poblarSelectDias(selCierre, ''); poblarSelectDias(selPago, '');
+    document.getElementById('inpTarjFechaCierre').value = '';
+    document.getElementById('inpTarjFechaPago').value = '';
   }
   openSheet('sheetTarjeta');
 }
@@ -809,7 +952,12 @@ function guardarTarjeta() {
   const deudaActual = parseFloat(document.getElementById('inpTarjDeuda').value);
   if (!nombre || isNaN(lineaCredito) || isNaN(deudaActual)) return showToast('Datos inválidos');
   const list = loadTarjetas(); const editId = document.getElementById('tarjetaEditId').value;
-  const obj = { id: editId || 'tc_'+Date.now(), nombre, lineaCredito, deudaActual, pagoMes: parseFloat(document.getElementById('inpTarjPagoMes').value)||null, diaCierre: parseInt(document.getElementById('inpTarjCierre').value)||null, diaPago: parseInt(document.getElementById('inpTarjPago').value)||null };
+  const obj = {
+    id: editId || 'tc_'+Date.now(), nombre, lineaCredito, deudaActual,
+    pagoMes: parseFloat(document.getElementById('inpTarjPagoMes').value)||null,
+    fechaCierre: document.getElementById('inpTarjFechaCierre').value || null,
+    fechaPago: document.getElementById('inpTarjFechaPago').value || null
+  };
   if (editId) { const i = list.findIndex(x => x.id === editId); if(i>-1) list[i] = obj; } else list.push(obj);
   localStorage.setItem(LS_KEY_TARJETAS, JSON.stringify(list)); closeSheet('sheetTarjeta'); renderCartera(); syncConfigApi(); // AUTO-SYNC
 }
@@ -820,21 +968,25 @@ function eliminarTarjeta(id) {
   renderCartera(); syncConfigApi(); // AUTO-SYNC
 }
 
-function setPagoOrigen(o) { pagoOrigenActual = o; document.querySelectorAll('.pago-origen-btn').forEach(b => b.classList.toggle('active', b.dataset.origen === o)); }
 function abrirPagoTarjeta(id) {
   const c = loadTarjetas().find(x => x.id === id); if(!c) return;
   pagoTarjetaIdActual = id; document.getElementById('pagoTarjId').value = id;
   document.getElementById('pagoTarjNombre').textContent = `${c.nombre} (Deuda: ${money(c.deudaActual)})`;
-  document.getElementById('inpPagoMonto').value = ''; setPagoOrigen('Efectivo'); openSheet('sheetPagoTarjeta');
+  document.getElementById('inpPagoMonto').value = '';
+  poblarSelectCuentas(document.getElementById('selPagoOrigen'), '');
+  openSheet('sheetPagoTarjeta');
 }
 
 async function confirmarPagoTarjeta() {
-  const m = parseFloat(document.getElementById('inpPagoMonto').value); if(!m || m<=0) return;
+  const m = parseFloat(document.getElementById('inpPagoMonto').value); if(!m || m<=0) return showToast('Monto inválido');
+  const origen = document.getElementById('selPagoOrigen').value;
+  if (!origen) return showToast('Crea una cuenta primero en Cartera');
+
   const list = loadTarjetas(); const c = list.find(x => x.id === pagoTarjetaIdActual); if(!c) return;
   c.deudaActual = Math.max(0, c.deudaActual - m); localStorage.setItem(LS_KEY_TARJETAS, JSON.stringify(list));
   closeSheet('sheetPagoTarjeta'); renderCartera(); syncConfigApi(); // AUTO-SYNC
   
-  await guardarManual({ tipo: 'Gasto', monto: m, categoria: 'Deudas', canal: pagoOrigenActual, detalle: `Pago TC ${c.nombre}`, fecha: new Date().toISOString() });
+  await guardarManual({ tipo: 'Gasto', monto: m, categoria: 'Deudas', canal: origen, detalle: `Pago TC ${c.nombre}`, fecha: new Date().toISOString() });
   fetchTransactions();
 }
 
@@ -842,12 +994,19 @@ async function confirmarPagoTarjeta() {
    MOVIMIENTO MANUAL
 ========================================================= */
 function setMovTipo(t) { movTipoActual = t; document.querySelectorAll('.mov-tipo-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === t)); }
-function setMovCanal(c) { movCanalActual = c; document.querySelectorAll('.mov-canal-btn').forEach(b => b.classList.toggle('active', b.dataset.canal === c)); }
-function openMovimiento() { document.getElementById('inpMovMonto').value=''; document.getElementById('inpMovDetalle').value=''; setMovTipo('Gasto'); setMovCanal('Efectivo'); openSheet('sheetMovimiento'); }
+
+function openMovimiento() {
+  document.getElementById('inpMovMonto').value=''; document.getElementById('inpMovDetalle').value='';
+  setMovTipo('Gasto');
+  poblarSelectCuentas(document.getElementById('selMovCanal'), '');
+  openSheet('sheetMovimiento');
+}
 
 async function guardarMovimiento() {
   const m = parseFloat(document.getElementById('inpMovMonto').value); if(!m || m<=0) return showToast('Monto inválido');
-  const payload = { tipo: movTipoActual, monto: m, categoria: document.getElementById('selMovCategoria').value, canal: movCanalActual, detalle: document.getElementById('inpMovDetalle').value, fecha: new Date().toISOString() };
+  const canal = document.getElementById('selMovCanal').value;
+  if (!canal) return showToast('Crea una cuenta primero en Cartera');
+  const payload = { tipo: movTipoActual, monto: m, categoria: document.getElementById('selMovCategoria').value, canal: canal, detalle: document.getElementById('inpMovDetalle').value, fecha: new Date().toISOString() };
   showToast('Guardando...'); closeSheet('sheetMovimiento');
   const ok = await guardarManual(payload);
   if (ok) { showToast('Guardado con éxito'); fetchTransactions(); } else { showToast('Error al guardar'); }
