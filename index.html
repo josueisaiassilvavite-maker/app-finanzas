@@ -144,6 +144,15 @@
           <p class="tabular text-[16.5px] font-extrabold leading-tight" id="saldoBancos">S/ 0.00</p>
         </div>
       </div>
+
+      <!-- MIS BIENES -->
+      <div class="flex items-center justify-between mb-2.5">
+        <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Mis bienes · Activos fijos</h2>
+        <button onclick="openNuevoBien()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Añadir bien</button>
+      </div>
+      <div id="bienesList" class="space-y-2 mb-6"></div>
+      <div id="bienesEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-6 text-center mb-6"><p class="text-[13.5px] text-ink2">Aún no registras bienes.<br>Ej. Celular, Laptop, Moto.</p></div>
+
       <!-- PASIVOS -->
       <div class="flex items-center justify-between mb-2.5">
         <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Pasivos · Tarjetas</h2>
@@ -205,8 +214,11 @@
     <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4">Nuevo deudor</h3>
       <input id="inpNombre" type="text" placeholder="Ej. Juan Pérez" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none">
-      <input id="inpMonto" type="number" inputmode="decimal" placeholder="Monto total (S/)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-6 outline-none">
-      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetDeudor')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold">Cancelar</button><button onclick="guardarDeudor()" class="py-3.5 rounded-xl bg-gold text-base font-bold text-base">Guardar</button></div>
+      <div class="relative mb-6">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+        <input id="inpMonto" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none">
+      </div>
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetDeudor')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarDeudor()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
     </div>
   </div>
 
@@ -215,8 +227,11 @@
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-1">Registrar abono</h3>
       <p class="text-[13px] text-ink2 mb-4" id="abonoDeudorNombre">—</p>
       <p class="tabular text-[20px] font-bold text-gold mb-4" id="abonoSaldoActual">S/ 0.00</p>
-      <input id="inpAbono" type="number" inputmode="decimal" placeholder="Monto del abono (S/)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-6 outline-none">
-      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetAbono')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold">Cancelar</button><button onclick="confirmarAbono()" class="py-3.5 rounded-xl bg-gold text-base font-bold text-base">Registrar</button></div>
+      <div class="relative mb-6">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+        <input id="inpAbono" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none">
+      </div>
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetAbono')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="confirmarAbono()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Registrar</button></div>
     </div>
   </div>
 
@@ -225,17 +240,70 @@
     <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="tarjetaSheetTitle">Nueva tarjeta</h3>
       <input type="hidden" id="tarjetaEditId" value="">
-      <input id="inpTarjNombre" type="text" placeholder="Ej. BCP Visa" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Banco / Tarjeta</label>
+      <input id="inpTarjNombre" type="text" placeholder="Ej. BCP Visa 4417" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none focus:border-gold/60">
+
       <div class="grid grid-cols-2 gap-3 mb-4">
-        <input id="inpTarjLinea" type="number" inputmode="decimal" placeholder="Línea de crédito" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] outline-none">
-        <input id="inpTarjDeuda" type="number" inputmode="decimal" placeholder="Deuda actual" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] outline-none">
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Línea de crédito</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+            <input id="inpTarjLinea" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-3 py-3 text-[15px] outline-none focus:border-gold/60">
+          </div>
+        </div>
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Deuda actual</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+            <input id="inpTarjDeuda" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-3 py-3 text-[15px] outline-none focus:border-gold/60">
+          </div>
+        </div>
       </div>
-      <input id="inpTarjPagoMes" type="number" inputmode="decimal" placeholder="Pago del mes (Opcional)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Pago del mes (opcional)</label>
+      <div class="relative mb-4">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+        <input id="inpTarjPagoMes" type="number" inputmode="decimal" placeholder="Cuota a vencer" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-3 py-3 text-[15px] outline-none focus:border-gold/60">
+      </div>
+
       <div class="grid grid-cols-2 gap-3 mb-6">
-        <input id="inpTarjCierre" type="number" min="1" max="31" placeholder="Día de cierre" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] outline-none">
-        <input id="inpTarjPago" type="number" min="1" max="31" placeholder="Día de pago" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] outline-none">
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Día de cierre</label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <select id="inpTarjCierre" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-3 py-3 text-[15px] outline-none focus:border-gold/60 appearance-none"></select>
+          </div>
+        </div>
+        <div>
+          <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Día de pago</label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <select id="inpTarjPago" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-3 py-3 text-[15px] outline-none focus:border-gold/60 appearance-none"></select>
+          </div>
+        </div>
       </div>
-      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetTarjeta')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold text-ink2">Cancelar</button><button onclick="guardarTarjeta()" class="py-3.5 rounded-xl bg-gold text-base font-bold">Guardar</button></div>
+
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetTarjeta')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarTarjeta()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
+    </div>
+  </div>
+
+  <!-- Modal Bien (Activo fijo) -->
+  <div id="sheetBien" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetBien')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="bienSheetTitle">Nuevo bien</h3>
+      <input type="hidden" id="bienEditId" value="">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Nombre del bien</label>
+      <input id="inpBienNombre" type="text" placeholder="Ej. Laptop MacBook Air" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none focus:border-gold/60">
+
+      <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Valor estimado</label>
+      <div class="relative mb-6">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+        <input id="inpBienValor" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none focus:border-gold/60">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetBien')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold text-ink2 active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarBien()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
     </div>
   </div>
 
@@ -244,8 +312,11 @@
     <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="saldoInicialTitulo">Saldo inicial</h3>
       <input type="hidden" id="saldoInicialTipo" value="">
-      <input id="inpSaldoInicial" type="number" inputmode="decimal" placeholder="Monto (S/)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-6 outline-none">
-      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetSaldoInicial')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold">Cancelar</button><button onclick="guardarSaldoInicial()" class="py-3.5 rounded-xl bg-gold text-base font-bold">Guardar</button></div>
+      <div class="relative mb-6">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+        <input id="inpSaldoInicial" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none">
+      </div>
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetSaldoInicial')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarSaldoInicial()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
     </div>
   </div>
 
@@ -255,12 +326,15 @@
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-1">Pagar tarjeta</h3>
       <p class="text-[13px] text-ink2 mb-4" id="pagoTarjNombre">—</p>
       <input type="hidden" id="pagoTarjId" value="">
-      <input id="inpPagoMonto" type="number" inputmode="decimal" placeholder="Monto a pagar (S/)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none">
-      <div class="grid grid-cols-2 gap-3 mb-6" id="pagoOrigenToggle">
-        <button type="button" onclick="setPagoOrigen('Efectivo')" data-origen="Efectivo" class="pago-origen-btn py-3 rounded-xl border text-[13.5px] font-semibold">Efectivo</button>
-        <button type="button" onclick="setPagoOrigen('Bancos')" data-origen="Bancos" class="pago-origen-btn py-3 rounded-xl border text-[13.5px] font-semibold">Bancos / Yape</button>
+      <div class="relative mb-4">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+        <input id="inpPagoMonto" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none">
       </div>
-      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetPagoTarjeta')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold">Cancelar</button><button onclick="confirmarPagoTarjeta()" class="py-3.5 rounded-xl bg-gold text-base font-bold">Pagar</button></div>
+      <div class="grid grid-cols-2 gap-3 mb-6" id="pagoOrigenToggle">
+        <button type="button" onclick="setPagoOrigen('Efectivo')" data-origen="Efectivo" class="pago-origen-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Efectivo</button>
+        <button type="button" onclick="setPagoOrigen('Bancos')" data-origen="Bancos" class="pago-origen-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Bancos / Yape</button>
+      </div>
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetPagoTarjeta')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="confirmarPagoTarjeta()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Pagar</button></div>
     </div>
   </div>
 
@@ -269,19 +343,30 @@
     <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
       <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4">Nuevo movimiento</h3>
       <div class="grid grid-cols-2 gap-3 mb-4" id="movTipoToggle">
-        <button type="button" onclick="setMovTipo('Ingreso')" data-tipo="Ingreso" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold">Ingreso</button>
-        <button type="button" onclick="setMovTipo('Gasto')" data-tipo="Gasto" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold">Gasto</button>
+        <button type="button" onclick="setMovTipo('Ingreso')" data-tipo="Ingreso" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Ingreso</button>
+        <button type="button" onclick="setMovTipo('Gasto')" data-tipo="Gasto" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Gasto</button>
       </div>
-      <input id="inpMovMonto" type="number" inputmode="decimal" placeholder="Monto (S/)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none">
+      <div class="relative mb-4">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
+        <input id="inpMovMonto" type="number" inputmode="decimal" placeholder="0.00" class="w-full bg-surface2 border border-hair rounded-xl pl-10 pr-4 py-3 text-[15px] outline-none">
+      </div>
       <select id="selMovCategoria" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none appearance-none">
         <option>Alimentación</option><option>Transporte</option><option>Servicios</option><option>Deudas</option><option>Ocio</option><option>Otros</option>
       </select>
       <div class="grid grid-cols-2 gap-3 mb-4" id="movCanalToggle">
-        <button type="button" onclick="setMovCanal('Efectivo')" data-canal="Efectivo" class="mov-canal-btn py-3 rounded-xl border text-[13.5px] font-semibold">Efectivo</button>
-        <button type="button" onclick="setMovCanal('Bancos')" data-canal="Bancos" class="mov-canal-btn py-3 rounded-xl border text-[13.5px] font-semibold">Bancos / Yape</button>
+        <button type="button" onclick="setMovCanal('Efectivo')" data-canal="Efectivo" class="mov-canal-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Efectivo</button>
+        <button type="button" onclick="setMovCanal('Bancos')" data-canal="Bancos" class="mov-canal-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Bancos / Yape</button>
       </div>
       <input id="inpMovDetalle" type="text" placeholder="Detalle (Opcional)" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-6 outline-none">
-      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetMovimiento')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold">Cancelar</button><button onclick="guardarMovimiento()" class="py-3.5 rounded-xl bg-gold text-base font-bold">Guardar</button></div>
+      <div class="grid grid-cols-2 gap-3"><button onclick="closeSheet('sheetMovimiento')" class="py-3.5 rounded-xl bg-surface2 border border-hair font-semibold active:scale-95 transition-transform ease-out">Cancelar</button><button onclick="guardarMovimiento()" class="py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Guardar</button></div>
+    </div>
+  </div>
+
+  <!-- PULL TO REFRESH INDICATOR -->
+  <div id="ptrIndicator" class="fixed left-0 right-0 z-20 flex items-center justify-center pointer-events-none" style="top: calc(env(safe-area-inset-top, 24px) + 54px); opacity: 0; transition: opacity .15s ease;">
+    <div class="flex items-center gap-2 bg-surface2 border border-hair rounded-full px-4 py-2 shadow-lg">
+      <svg id="ptrSpinner" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.5" stroke-linecap="round" style="transition: transform .1s ease;"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      <span id="ptrLabel" class="text-[12.5px] font-medium text-ink2">Desliza para actualizar</span>
     </div>
   </div>
 
@@ -300,6 +385,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyh_iugJhbLMZyCPnj43Kn_
 const LS_KEY = 'finctrl_deudores_v1';
 const LS_KEY_TARJETAS = 'finctrl_tarjetas_v1';
 const LS_KEY_SALDOS = 'finctrl_saldos_iniciales_v1';
+const LS_KEY_BIENES = 'finctrl_bienes_v1';
 
 const fmtMoney = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', minimumFractionDigits: 2 });
 const money = (n) => fmtMoney.format(Number(n) || 0);
@@ -307,6 +393,7 @@ const money = (n) => fmtMoney.format(Number(n) || 0);
 let transactions = [];
 let deudorPendienteAbonoId = null;
 let tarjetaEditandoId = null;
+let bienEditandoId = null;
 let movTipoActual = 'Gasto';
 let movCanalActual = 'Efectivo';
 let pagoOrigenActual = 'Efectivo';
@@ -348,7 +435,7 @@ function closeSheet(id) { document.getElementById(id).classList.remove('open'); 
 function escapeHtml(str) { return String(str).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
 
 /* =========================================================
-   SINCRONIZACIÓN API (LA MAGIA DE LA NUBE)
+   SINCRONIZACIÓN API (LA MAGIA DE LA NUBE) — INTACTO
 ========================================================= */
 async function syncDeudoresApi() {
   showToast('Guardando deudores en la nube...');
@@ -361,7 +448,7 @@ async function syncDeudoresApi() {
 async function syncConfigApi() {
   showToast('Guardando configuración en la nube...');
   try {
-    await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'sync_config', config: { saldosIniciales: loadSaldosIniciales(), tarjetas: loadTarjetas() } }) });
+    await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'sync_config', config: { saldosIniciales: loadSaldosIniciales(), tarjetas: loadTarjetas(), bienes: loadBienes() } }) });
   } catch(e) { console.error(e); }
 }
 
@@ -371,7 +458,10 @@ function forceSyncAll() {
 }
 
 /* =========================================================
-   DASHBOARD: FETCH + RENDER
+   DASHBOARD: FETCH + RENDER — LÓGICA DE RED INTACTA
+   (única adición: si raw.config trae "bienes", se hidrata igual
+   que ya se hacía con tarjetas/saldosIniciales, para que la nube
+   sea la fuente de verdad también para Mis Bienes)
 ========================================================= */
 async function fetchTransactions(manual = false) {
   const dot = document.getElementById('statusDot');
@@ -399,10 +489,11 @@ async function fetchTransactions(manual = false) {
       localStorage.setItem(LS_KEY, JSON.stringify(remappedDeud));
     }
 
-    /* LEER TARJETAS Y SALDOS DE LA NUBE */
+    /* LEER TARJETAS, SALDOS Y BIENES DE LA NUBE */
     if (raw.config) {
       if (raw.config.tarjetas) localStorage.setItem(LS_KEY_TARJETAS, JSON.stringify(raw.config.tarjetas));
       if (raw.config.saldosIniciales) localStorage.setItem(LS_KEY_SALDOS, JSON.stringify(raw.config.saldosIniciales));
+      if (raw.config.bienes) localStorage.setItem(LS_KEY_BIENES, JSON.stringify(raw.config.bienes));
     }
 
     renderDashboard(); renderCartera(); renderDeudores();
@@ -422,9 +513,9 @@ async function fetchTransactions(manual = false) {
 function renderDashboard() {
   const ingresos = transactions.filter(t => t.tipo.includes('ingreso')).reduce((s, t) => s + Math.abs(t.monto), 0);
   const gastos = transactions.filter(t => t.tipo.includes('gasto')).reduce((s, t) => s + Math.abs(t.monto), 0);
-  document.getElementById('saldoNeto').textContent = money(ingresos - gastos);
   document.getElementById('totalIngresos').textContent = money(ingresos);
   document.getElementById('totalGastos').textContent = money(gastos);
+  renderPatrimonio();
 
   const sorted = [...transactions].sort((a, b) => (new Date(b.fecha).getTime() || 0) - (new Date(a.fecha).getTime() || 0));
   const el = document.getElementById('movList');
@@ -444,6 +535,24 @@ function renderDashboard() {
         <div class="text-right shrink-0"><p class="tabular text-[13.5px] font-bold ${clr}">${isIng?'+':'-'} ${money(Math.abs(t.monto))}</p></div>
       </div>`;
   }).join('');
+}
+
+/* =========================================================
+   PATRIMONIO NETO 360°
+   Activos = Efectivo + Bancos + Cuentas por cobrar + Bienes
+   Pasivos = Suma de deudas actuales de tarjetas
+========================================================= */
+function renderPatrimonio() {
+  const { efectivo, bancos } = computeSaldosActivos();
+  const totalPorCobrar = loadDeudores().reduce((s, d) => s + (d.estado === 'Saldado' ? 0 : Number(d.saldoPendiente) || 0), 0);
+  const totalBienes = loadBienes().reduce((s, b) => s + (Number(b.valor) || 0), 0);
+  const totalActivos = efectivo + bancos + totalPorCobrar + totalBienes;
+
+  const totalPasivos = loadTarjetas().reduce((s, c) => s + (Number(c.deudaActual) || 0), 0);
+
+  const patrimonio = totalActivos - totalPasivos;
+  const elPatrimonio = document.getElementById('saldoNeto');
+  if (elPatrimonio) elPatrimonio.textContent = money(patrimonio);
 }
 
 /* =========================================================
@@ -472,7 +581,7 @@ function renderDeudores() {
         <div class="h-1.5 bg-hair rounded-full overflow-hidden mb-3"><div class="h-full ${s ? 'bg-up' : 'bg-gold'} rounded-full" style="width:${pct}%"></div></div>
         <div class="flex items-center justify-between">
           <div><p class="text-[11px] text-ink2">Saldo pendiente</p><p class="tabular text-[17px] font-bold ${s ? 'text-ink2' : 'text-ink'}">${money(d.saldoPendiente)}</p></div>
-          ${s ? '' : `<button onclick="abrirAbono('${d.id}')" class="px-4 py-2.5 rounded-xl bg-gold/15 text-gold text-[12.5px] font-semibold active:scale-95">Abonar</button>`}
+          ${s ? '' : `<button onclick="abrirAbono('${d.id}')" class="px-4 py-2.5 rounded-xl bg-gold/15 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out">Abonar</button>`}
         </div>
       </div>`;
   }).join('');
@@ -488,7 +597,7 @@ function guardarDeudor() {
   const list = loadDeudores();
   list.push({ id: 'd_' + Date.now(), nombre, montoTotal: monto, saldoPendiente: monto, estado: 'Pendiente', abonos: [], fechaCreacion: new Date().toISOString() });
   localStorage.setItem(LS_KEY, JSON.stringify(list));
-  closeSheet('sheetDeudor'); renderDeudores(); syncDeudoresApi(); // AUTO-SYNC
+  closeSheet('sheetDeudor'); renderDeudores(); renderPatrimonio(); syncDeudoresApi(); // AUTO-SYNC
 }
 
 function abrirAbono(id) {
@@ -507,23 +616,115 @@ function confirmarAbono() {
   d.saldoPendiente = Math.max(0, d.saldoPendiente - monto);
   if (d.saldoPendiente <= 0) d.estado = 'Saldado';
   localStorage.setItem(LS_KEY, JSON.stringify(list));
-  closeSheet('sheetAbono'); renderDeudores(); syncDeudoresApi(); // AUTO-SYNC
+  closeSheet('sheetAbono'); renderDeudores(); renderPatrimonio(); syncDeudoresApi(); // AUTO-SYNC
 }
 
 /* =========================================================
-   CARTERA Y TARJETAS
+   CARTERA: SALDOS EFECTIVO / BANCOS
 ========================================================= */
-function loadTarjetas() { try { return JSON.parse(localStorage.getItem(LS_KEY_TARJETAS)) || []; } catch(e) { return []; } }
 function loadSaldosIniciales() { try { return JSON.parse(localStorage.getItem(LS_KEY_SALDOS)) || { efectivo: 0, bancos: 0 }; } catch(e) { return { efectivo: 0, bancos: 0 }; } }
 
-function renderCartera() {
+function computeSaldosActivos() {
   const ini = loadSaldosIniciales(); let ef = Number(ini.efectivo)||0; let bc = Number(ini.bancos)||0;
   transactions.forEach(t => {
     const sum = t.tipo.includes('ingreso') ? t.monto : -t.monto;
-    if (t.canal.toLowerCase().includes('efectivo')) ef += sum; else bc += sum;
+    if ((t.canal || '').toLowerCase().includes('efectivo')) ef += sum; else bc += sum;
   });
-  document.getElementById('saldoEfectivo').textContent = money(ef); document.getElementById('saldoBancos').textContent = money(bc);
+  return { efectivo: ef, bancos: bc };
+}
 
+function renderCartera() {
+  const { efectivo, bancos } = computeSaldosActivos();
+  document.getElementById('saldoEfectivo').textContent = money(efectivo);
+  document.getElementById('saldoBancos').textContent = money(bancos);
+
+  renderBienes();
+  renderTarjetas();
+  renderPatrimonio();
+}
+
+/* =========================================================
+   MIS BIENES (ACTIVOS FIJOS)
+========================================================= */
+function loadBienes() { try { return JSON.parse(localStorage.getItem(LS_KEY_BIENES)) || []; } catch(e) { return []; } }
+function saveBienesLocal(list) { localStorage.setItem(LS_KEY_BIENES, JSON.stringify(list)); }
+
+function renderBienes() {
+  const list = loadBienes();
+  const el = document.getElementById('bienesList');
+  const empty = document.getElementById('bienesEmpty');
+
+  if (!list.length) { el.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  el.innerHTML = list.map(b => `
+    <div class="flex items-center gap-3 bg-surface border border-hair rounded-xl2 px-3.5 py-3">
+      <div class="w-9 h-9 rounded-full bg-goldSoft flex items-center justify-center shrink-0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 4v16"/></svg>
+      </div>
+      <div class="flex-1 min-w-0"><p class="text-[13.5px] font-semibold truncate">${escapeHtml(b.nombre)}</p><p class="text-[11.5px] text-ink2">Activo fijo</p></div>
+      <p class="tabular text-[13.5px] font-bold text-gold shrink-0">${money(b.valor)}</p>
+      <div class="flex items-center gap-1 shrink-0">
+        <button onclick="openNuevoBien('${b.id}')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button onclick="eliminarBien('${b.id}')" class="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E5635C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+      </div>
+    </div>`).join('');
+}
+
+function openNuevoBien(id) {
+  bienEditandoId = id || null;
+  document.getElementById('bienEditId').value = id || '';
+  if (id) {
+    const b = loadBienes().find(x => x.id === id); if (!b) return;
+    document.getElementById('bienSheetTitle').textContent = 'Editar bien';
+    document.getElementById('inpBienNombre').value = b.nombre || '';
+    document.getElementById('inpBienValor').value = b.valor || '';
+  } else {
+    document.getElementById('bienSheetTitle').textContent = 'Nuevo bien';
+    document.getElementById('inpBienNombre').value = '';
+    document.getElementById('inpBienValor').value = '';
+  }
+  openSheet('sheetBien');
+}
+
+function guardarBien() {
+  const nombre = document.getElementById('inpBienNombre').value.trim();
+  const valor = parseFloat(document.getElementById('inpBienValor').value);
+  if (!nombre) return showToast('Ingresa el nombre del bien');
+  if (isNaN(valor) || valor <= 0) return showToast('Ingresa un valor válido');
+
+  const list = loadBienes();
+  const editId = document.getElementById('bienEditId').value;
+  if (editId) {
+    const i = list.findIndex(x => x.id === editId);
+    if (i > -1) list[i] = { ...list[i], nombre, valor };
+  } else {
+    list.push({ id: 'bn_' + Date.now(), nombre, valor });
+  }
+  saveBienesLocal(list);
+  closeSheet('sheetBien');
+  renderBienes(); renderPatrimonio();
+  syncConfigApi(); // AUTO-SYNC (payload ahora incluye bienes)
+}
+
+function eliminarBien(id) {
+  if (!confirm('¿Eliminar este bien?')) return;
+  saveBienesLocal(loadBienes().filter(x => x.id !== id));
+  renderBienes(); renderPatrimonio();
+  syncConfigApi(); // AUTO-SYNC
+}
+
+/* =========================================================
+   TARJETAS DE CRÉDITO (PASIVOS)
+========================================================= */
+function loadTarjetas() { try { return JSON.parse(localStorage.getItem(LS_KEY_TARJETAS)) || []; } catch(e) { return []; } }
+
+function poblarSelectDias(selectEl, valorActual) {
+  selectEl.innerHTML = '<option value="">Elegir día</option>' + Array.from({ length: 31 }, (_, i) => i + 1)
+    .map(d => `<option value="${d}" ${Number(valorActual) === d ? 'selected' : ''}>Día ${d}</option>`).join('');
+}
+
+function renderTarjetas() {
   const list = loadTarjetas(); const el = document.getElementById('tarjetasList');
   if (!list.length) { el.innerHTML = ''; document.getElementById('tarjetasEmpty').classList.remove('hidden'); return; }
   document.getElementById('tarjetasEmpty').classList.add('hidden');
@@ -536,21 +737,42 @@ function renderCartera() {
     let bg = 'linear-gradient(135deg, #1C2025 0%, #22262C 55%, #2A2F36 130%)';
     if(n.includes('bcp')) bg = 'linear-gradient(135deg, #0B3B8C 0%, #0B3B8C 55%, #E8720C 130%)';
     if(n.includes('interbank')) bg = 'linear-gradient(135deg, #0E5A3A 0%, #12734A 55%, #1FAE6B 130%)';
+    if(n.includes('bbva')) bg = 'linear-gradient(135deg, #001A4D 0%, #052A72 55%, #0C43A6 130%)';
+    if(n.includes('scotiabank') || n.includes('scotia')) bg = 'linear-gradient(135deg, #7A0C1E 0%, #A5122B 55%, #D91E3A 130%)';
+    const diasTxt = diasParaPago(c.diaPago);
     return `
       <div class="credit-card rounded-xl2 p-4 text-white shadow-lg" style="background:${bg}">
         <div class="flex items-start justify-between mb-4 relative z-10">
-          <div><p class="text-[14.5px] font-bold">${escapeHtml(c.nombre)}</p><p class="text-[11px] text-white/70">Pago: día ${c.diaPago||'—'}</p></div>
+          <div><p class="text-[14.5px] font-bold">${escapeHtml(c.nombre)}</p><p class="text-[11px] text-white/70">Cierre: día ${c.diaCierre||'—'} · Pago: día ${c.diaPago||'—'}</p></div>
           <div class="flex gap-1">
-            <button onclick="openNuevaTarjeta('${c.id}')" class="w-7 h-7 bg-white/15 rounded-full flex items-center justify-center active:scale-90"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-            <button onclick="eliminarTarjeta('${c.id}')" class="w-7 h-7 bg-white/15 rounded-full flex items-center justify-center active:scale-90"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            <button onclick="openNuevaTarjeta('${c.id}')" class="w-7 h-7 bg-white/15 rounded-full flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            <button onclick="eliminarTarjeta('${c.id}')" class="w-7 h-7 bg-white/15 rounded-full flex items-center justify-center active:scale-90 transition-transform ease-out"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
           </div>
         </div>
-        <div class="relative z-10 mb-3"><p class="text-[11px] text-white/70">Deuda actual</p><p class="tabular text-[22px] font-extrabold leading-none">${money(deu)}</p></div>
+        <div class="relative z-10 mb-3">
+          <div class="flex items-end justify-between mb-1">
+            <p class="text-[11px] text-white/70">Deuda actual</p>
+            ${diasTxt ? `<span class="text-[10.5px] font-semibold bg-white/15 px-2 py-0.5 rounded-full">${diasTxt}</span>` : ''}
+          </div>
+          <p class="tabular text-[22px] font-extrabold leading-none">${money(deu)}</p>
+          ${c.pagoMes ? `<p class="text-[11.5px] text-white/80 mt-1">Cuota del mes: <span class="font-semibold">${money(c.pagoMes)}</span></p>` : ''}
+        </div>
         <div class="h-1.5 rounded-full overflow-hidden mb-1.5 relative z-10" style="background:rgba(255,255,255,0.2)"><div class="h-full rounded-full" style="width:${pct}%; background:${bar}"></div></div>
         <div class="flex justify-between mb-4 relative z-10 text-[10.5px] text-white/70"><p>Disp: <b>${money(disp)}</b></p><p>Línea: <b>${money(lin)}</b></p></div>
-        <button onclick="abrirPagoTarjeta('${c.id}')" class="relative z-10 w-full py-2.5 rounded-xl bg-white/15 text-[13px] font-semibold active:scale-95">Pagar tarjeta</button>
+        <button onclick="abrirPagoTarjeta('${c.id}')" class="relative z-10 w-full py-2.5 rounded-xl bg-white/15 text-[13px] font-semibold active:scale-95 transition-transform ease-out">Pagar tarjeta</button>
       </div>`;
   }).join('');
+}
+
+function diasParaPago(diaPago) {
+  const dia = parseInt(diaPago, 10);
+  if (!dia || dia < 1 || dia > 31) return '';
+  const hoy = new Date();
+  const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  let objetivo = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
+  if (objetivo < hoySinHora) objetivo = new Date(hoy.getFullYear(), hoy.getMonth() + 1, dia);
+  const diff = Math.round((objetivo - hoySinHora) / 86400000);
+  return diff === 0 ? 'Vence hoy' : diff === 1 ? 'Vence mañana' : `Faltan ${diff} días`;
 }
 
 function abrirEditarSaldo(t) {
@@ -566,15 +788,18 @@ function guardarSaldoInicial() {
 
 function openNuevaTarjeta(id) {
   document.getElementById('tarjetaEditId').value = id || '';
+  const selCierre = document.getElementById('inpTarjCierre');
+  const selPago = document.getElementById('inpTarjPago');
   if (id) {
     const c = loadTarjetas().find(x => x.id === id); if(!c) return;
     document.getElementById('tarjetaSheetTitle').textContent = 'Editar tarjeta';
     document.getElementById('inpTarjNombre').value = c.nombre||''; document.getElementById('inpTarjLinea').value = c.lineaCredito||'';
     document.getElementById('inpTarjDeuda').value = c.deudaActual||''; document.getElementById('inpTarjPagoMes').value = c.pagoMes||'';
-    document.getElementById('inpTarjCierre').value = c.diaCierre||''; document.getElementById('inpTarjPago').value = c.diaPago||'';
+    poblarSelectDias(selCierre, c.diaCierre); poblarSelectDias(selPago, c.diaPago);
   } else {
     document.getElementById('tarjetaSheetTitle').textContent = 'Nueva tarjeta';
-    ['Nombre','Linea','Deuda','PagoMes','Cierre','Pago'].forEach(i => document.getElementById('inpTarj'+i).value = '');
+    ['Nombre','Linea','Deuda','PagoMes'].forEach(i => document.getElementById('inpTarj'+i).value = '');
+    poblarSelectDias(selCierre, ''); poblarSelectDias(selPago, '');
   }
   openSheet('sheetTarjeta');
 }
@@ -609,7 +834,7 @@ async function confirmarPagoTarjeta() {
   c.deudaActual = Math.max(0, c.deudaActual - m); localStorage.setItem(LS_KEY_TARJETAS, JSON.stringify(list));
   closeSheet('sheetPagoTarjeta'); renderCartera(); syncConfigApi(); // AUTO-SYNC
   
-  await fetch(API_URL, { method: 'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action: 'movimiento', tipo: 'Gasto', monto: m, categoria: 'Deudas', canal: pagoOrigenActual, detalle: `Pago TC ${c.nombre}`, fecha: new Date().toISOString() }) });
+  await guardarManual({ tipo: 'Gasto', monto: m, categoria: 'Deudas', canal: pagoOrigenActual, detalle: `Pago TC ${c.nombre}`, fecha: new Date().toISOString() });
   fetchTransactions();
 }
 
@@ -622,12 +847,83 @@ function openMovimiento() { document.getElementById('inpMovMonto').value=''; doc
 
 async function guardarMovimiento() {
   const m = parseFloat(document.getElementById('inpMovMonto').value); if(!m || m<=0) return showToast('Monto inválido');
-  const payload = { action: 'movimiento', tipo: movTipoActual, monto: m, categoria: document.getElementById('selMovCategoria').value, canal: movCanalActual, detalle: document.getElementById('inpMovDetalle').value, fecha: new Date().toISOString() };
+  const payload = { tipo: movTipoActual, monto: m, categoria: document.getElementById('selMovCategoria').value, canal: movCanalActual, detalle: document.getElementById('inpMovDetalle').value, fecha: new Date().toISOString() };
   showToast('Guardando...'); closeSheet('sheetMovimiento');
-  try { await fetch(API_URL, { method: 'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) }); showToast('Guardado con éxito'); fetchTransactions(); } catch(e) { showToast('Error al guardar'); }
+  const ok = await guardarManual(payload);
+  if (ok) { showToast('Guardado con éxito'); fetchTransactions(); } else { showToast('Error al guardar'); }
 }
 
+/* =========================================================
+   guardarManual — INTACTO (POST del movimiento a la API)
+========================================================= */
+async function guardarManual(payload) {
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'movimiento', ...payload }) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return true;
+  } catch (err) {
+    console.error('guardarManual error:', err);
+    return false;
+  }
+}
+
+/* =========================================================
+   PULL-TO-REFRESH (deslizar para actualizar)
+========================================================= */
+(function setupPullToRefresh() {
+  const main = document.querySelector('main');
+  const indicator = document.getElementById('ptrIndicator');
+  const spinner = document.getElementById('ptrSpinner');
+  const label = document.getElementById('ptrLabel');
+
+  const THRESHOLD = 70;
+  let startY = 0;
+  let pulling = false;
+  let refreshing = false;
+
+  main.addEventListener('touchstart', (e) => {
+    if (main.scrollTop <= 0 && !refreshing) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    } else {
+      pulling = false;
+    }
+  }, { passive: true });
+
+  main.addEventListener('touchmove', (e) => {
+    if (!pulling || refreshing) return;
+    const delta = e.touches[0].clientY - startY;
+    if (delta > 0 && main.scrollTop <= 0) {
+      const pull = Math.min(delta, 120);
+      indicator.style.opacity = Math.min(pull / THRESHOLD, 1);
+      spinner.style.transform = `rotate(${pull * 3}deg)`;
+      label.textContent = pull >= THRESHOLD ? 'Suelta para actualizar' : 'Desliza para actualizar';
+    }
+  }, { passive: true });
+
+  main.addEventListener('touchend', (e) => {
+    if (!pulling || refreshing) { pulling = false; return; }
+    const delta = (e.changedTouches[0].clientY - startY);
+    pulling = false;
+    if (delta >= THRESHOLD && main.scrollTop <= 0) {
+      refreshing = true;
+      label.textContent = 'Actualizando...';
+      indicator.style.opacity = '1';
+      spinner.style.animation = 'shimmer 0.6s linear infinite';
+      fetchTransactions(true).finally(() => {
+        refreshing = false;
+        indicator.style.opacity = '0';
+        spinner.style.animation = '';
+        spinner.style.transform = '';
+      });
+    } else {
+      indicator.style.opacity = '0';
+    }
+  }, { passive: true });
+})();
+
 fetchTransactions();
+renderCartera();
 </script>
 </body>
 </html>
