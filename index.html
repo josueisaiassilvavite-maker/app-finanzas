@@ -57,6 +57,7 @@
   .navbtn svg { transition: stroke .2s ease, fill .2s ease; }
   .navbtn.active .navlabel { color: #CBA35C; }
   .navbtn.active svg { stroke: #CBA35C; }
+  .navbtn.active { background: rgba(203,163,92,0.10); }
 
   .skeleton { background: linear-gradient(90deg, #1C2025 25%, #232830 37%, #1C2025 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
   @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
@@ -75,120 +76,180 @@
   .credit-card { position: relative; overflow: hidden; }
   .credit-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 55%); pointer-events: none; }
   select { color-scheme: dark; }
+
+  /* Lock screen */
+  #lockScreen.hidden { display: none !important; }
+
+  /* FAB: on desktop no hay bottom-nav, así que baja el offset */
+  @media (min-width: 768px) {
+    #fabMovimiento { bottom: 24px !important; }
+  }
 </style>
 </head>
 
 <body class="bg-base text-ink min-h-screen scrollbar-none">
-<div class="max-w-md mx-auto min-h-screen flex flex-col relative">
 
-  <!-- HEADER -->
-  <header class="safe-top px-5 pt-4 pb-2 flex items-center justify-between">
-    <div>
-      <p class="text-[13px] text-ink2 font-medium" id="greeting">Buenas tardes</p>
-      <h1 class="text-[19px] font-semibold tracking-tight -mt-0.5" id="headerTitle">Dashboard</h1>
+<!-- ===================== LOCK SCREEN ===================== -->
+<div id="lockScreen" class="fixed inset-0 z-[100] bg-base flex flex-col items-center justify-center px-8">
+  <div class="w-16 h-16 rounded-2xl bg-goldSoft flex items-center justify-center mb-5">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  </div>
+  <h1 class="text-[20px] font-bold mb-1">Control Financiero</h1>
+  <p class="text-[13px] text-ink2 mb-8">Ingresa tu clave para continuar</p>
+  <input id="lockInput" type="password" inputmode="numeric" autocomplete="off" placeholder="••••••••" onkeydown="if(event.key==='Enter') intentarDesbloqueo()" class="w-full max-w-[280px] text-center tracking-[0.3em] bg-surface border border-hair rounded-xl px-4 py-3.5 text-[18px] text-ink outline-none focus:border-gold/60 mb-4">
+  <button onclick="intentarDesbloqueo()" class="w-full max-w-[280px] py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Ingresar</button>
+</div>
+
+<div class="min-h-screen flex flex-col md:flex-row relative max-w-md md:max-w-none mx-auto">
+
+  <!-- ===================== SIDEBAR (solo desktop/tablet) ===================== -->
+  <aside class="hidden md:flex md:flex-col md:w-64 md:h-screen md:sticky md:top-0 md:shrink-0 border-r border-hair bg-surface px-4 py-6">
+    <div class="flex items-center gap-2.5 mb-8 px-2">
+      <div class="w-9 h-9 rounded-xl bg-goldSoft flex items-center justify-center shrink-0">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <p class="text-[15px] font-bold tracking-tight">Control Financiero</p>
     </div>
-    <div id="statusDot" class="w-2 h-2 rounded-full bg-ink2/40 mr-1"></div>
-  </header>
+    <nav class="flex flex-col gap-1">
+      <button class="navbtn active flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors" data-tab="dashboard" onclick="switchTab('dashboard')">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="17" rx="1"/></svg>
+        <span class="navlabel text-[13.5px] font-medium text-gold">Dashboard</span>
+      </button>
+      <button class="navbtn flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors" data-tab="cartera" onclick="switchTab('cartera')">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-3a2 2 0 0 0 0 4h3"/><path d="M16 3H5a2 2 0 0 0-2 2v3"/></svg>
+        <span class="navlabel text-[13.5px] font-medium text-ink2">Cartera</span>
+      </button>
+      <button class="navbtn flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors" data-tab="cxc" onclick="switchTab('cxc')">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="navlabel text-[13.5px] font-medium text-ink2">Por cobrar</span>
+      </button>
+      <button class="navbtn flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors" data-tab="tools" onclick="switchTab('tools')">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span class="navlabel text-[13.5px] font-medium text-ink2">Ajustes</span>
+      </button>
+    </nav>
+  </aside>
 
-  <!-- MAIN SCROLL AREA -->
-  <main class="flex-1 overflow-y-auto scrollbar-none px-5 pb-32 pt-2">
+  <!-- ===================== COLUMNA DE CONTENIDO ===================== -->
+  <div class="flex-1 flex flex-col min-h-screen md:min-w-0">
 
-    <!-- VIEW 1: DASHBOARD -->
-    <section id="view-dashboard" class="view active">
-      <!-- Tarjeta hero: min-h fija + flex-shrink-0 para que NUNCA salte de tamaño mientras carga -->
-      <div class="relative rounded-xl2 border border-hair bg-gradient-to-b from-surface2 to-surface p-5 overflow-hidden mb-4 min-h-[196px] flex-shrink-0 flex flex-col justify-between">
-        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gold/10 blur-3xl"></div>
-        <div>
-          <p class="text-[12.5px] text-ink2 font-medium mb-1">Patrimonio neto</p>
-          <p class="tabular text-[36px] font-extrabold leading-none" id="saldoNeto">S/ 0.00</p>
-        </div>
-        <div>
-          <div class="h-px bg-hair my-4"></div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span class="text-[12px] text-ink2 font-medium">Ingresos</span></div>
-              <p class="tabular text-[18px] font-bold text-up" id="totalIngresos">S/ 0.00</p>
-            </div>
-            <div>
-              <div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E5635C" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span class="text-[12px] text-ink2 font-medium">Gastos</span></div>
-              <p class="tabular text-[18px] font-bold text-down" id="totalGastos">S/ 0.00</p>
+    <!-- HEADER -->
+    <header class="safe-top md:pt-8 px-5 pt-4 pb-2 md:px-8 flex items-center justify-between md:max-w-6xl md:w-full md:mx-auto">
+      <div>
+        <p class="text-[13px] text-ink2 font-medium" id="greeting">Buenas tardes</p>
+        <h1 class="text-[19px] md:text-[22px] font-semibold tracking-tight -mt-0.5" id="headerTitle">Dashboard</h1>
+      </div>
+      <div id="statusDot" class="w-2 h-2 rounded-full bg-ink2/40 mr-1"></div>
+    </header>
+
+    <!-- MAIN SCROLL AREA -->
+    <main class="flex-1 overflow-y-auto scrollbar-none px-5 pb-32 md:pb-10 pt-2 md:px-8 md:max-w-6xl md:w-full md:mx-auto">
+
+      <!-- VIEW 1: DASHBOARD -->
+      <section id="view-dashboard" class="view active">
+        <!-- Tarjeta hero: min-h fija + flex-shrink-0 para que NUNCA salte de tamaño mientras carga -->
+        <div class="relative rounded-xl2 border border-hair bg-gradient-to-b from-surface2 to-surface p-5 md:p-7 overflow-hidden mb-4 min-h-[196px] flex-shrink-0 flex flex-col justify-between md:max-w-xl">
+          <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gold/10 blur-3xl"></div>
+          <div>
+            <p class="text-[12.5px] text-ink2 font-medium mb-1">Patrimonio neto</p>
+            <p class="tabular text-[36px] font-extrabold leading-none" id="saldoNeto">S/ 0.00</p>
+          </div>
+          <div>
+            <div class="h-px bg-hair my-4"></div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span class="text-[12px] text-ink2 font-medium">Ingresos</span></div>
+                <p class="tabular text-[18px] font-bold text-up" id="totalIngresos">S/ 0.00</p>
+              </div>
+              <div>
+                <div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E5635C" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg><span class="text-[12px] text-ink2 font-medium">Gastos</span></div>
+                <p class="tabular text-[18px] font-bold text-down" id="totalGastos">S/ 0.00</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="flex items-center justify-between mb-2 mt-6">
-        <h2 class="text-[14.5px] font-semibold">Últimos movimientos</h2>
-        <span class="text-[11.5px] text-ink2" id="lastSync">—</span>
-      </div>
-      <div id="movList" class="space-y-2 min-h-[128px]"></div>
-      <div id="dashError" class="hidden mt-4 rounded-xl2 border border-hair bg-surface p-5 text-center">
-        <p class="text-[13.5px] text-ink2 mb-3">No se pudo cargar la data. Revisa tu conexión.</p>
-        <button onclick="fetchTransactions()" class="px-4 py-2 rounded-xl bg-gold/15 text-gold text-[13px] font-semibold">Reintentar</button>
-      </div>
-    </section>
-
-    <!-- VIEW 2: CARTERA -->
-    <section id="view-cartera" class="view">
-      <!-- MIS CUENTAS (dinámico) -->
-      <div class="flex items-center justify-between mb-2.5">
-        <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Mis cuentas</h2>
-        <button onclick="openNuevaCuenta()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Añadir cuenta</button>
-      </div>
-      <div id="cuentasList" class="space-y-2 mb-6"></div>
-      <div id="cuentasEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-6 text-center mb-6"><p class="text-[13.5px] text-ink2">Aún no registras cuentas.<br>Ej. BCP Principal, Caja fuerte, Yape.</p></div>
-
-      <!-- MIS BIENES -->
-      <div class="flex items-center justify-between mb-2.5">
-        <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Mis bienes · Activos fijos</h2>
-        <button onclick="openNuevoBien()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Añadir bien</button>
-      </div>
-      <div id="bienesList" class="space-y-2 mb-6"></div>
-      <div id="bienesEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-6 text-center mb-6"><p class="text-[13.5px] text-ink2">Aún no registras bienes.<br>Ej. Celular, Laptop, Moto.</p></div>
-
-      <!-- PASIVOS -->
-      <div class="flex items-center justify-between mb-2.5">
-        <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Pasivos · Tarjetas</h2>
-        <button onclick="openNuevaTarjeta()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Añadir tarjeta</button>
-      </div>
-      <div id="tarjetasList" class="space-y-3"></div>
-      <div id="tarjetasEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-8 text-center"><p class="text-[13.5px] text-ink2">Aún no registras tarjetas de crédito.</p></div>
-    </section>
-
-    <!-- VIEW 3: POR COBRAR -->
-    <section id="view-cxc" class="view">
-      <div class="rounded-xl2 border border-hair bg-surface p-4 mb-4 flex items-center justify-between">
-        <div>
-          <p class="text-[12px] text-ink2 font-medium mb-0.5">Total por cobrar</p>
-          <p class="tabular text-[22px] font-extrabold text-gold" id="totalPorCobrar">S/ 0.00</p>
+        <div class="flex items-center justify-between mb-2 mt-6">
+          <h2 class="text-[14.5px] font-semibold">Últimos movimientos</h2>
+          <span class="text-[11.5px] text-ink2" id="lastSync">—</span>
         </div>
-        <button onclick="openNuevoDeudor()" class="shrink-0 flex items-center gap-1.5 bg-gold text-base font-semibold text-[13px] px-4 py-2.5 rounded-xl active:scale-95 transition-transform"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0B0D10" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nuevo</button>
-      </div>
-      <div id="deudoresList" class="space-y-3"></div>
-      <div id="cxcEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-8 text-center"><p class="text-[13.5px] text-ink2">Aún no registras deudores.</p></div>
-    </section>
-
-    <!-- VIEW 4: HERRAMIENTAS -->
-    <section id="view-tools" class="view">
-      <p class="text-[12.5px] text-ink2 font-medium mb-3 mt-1">Sincronización</p>
-      <button onclick="fetchTransactions(true)" class="w-full flex items-center justify-between bg-surface border border-hair rounded-xl2 p-4 mb-3 active:bg-surface2 transition-colors">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-full bg-goldSoft flex items-center justify-center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></div>
-          <div class="text-left"><p class="text-[14px] font-semibold">Forzar actualización</p><p class="text-[11.5px] text-ink2" id="toolsLastSync">Jala datos de la nube</p></div>
+        <div id="movList" class="space-y-2 min-h-[128px] md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-2 md:space-y-0"></div>
+        <div id="dashError" class="hidden mt-4 rounded-xl2 border border-hair bg-surface p-5 text-center">
+          <p class="text-[13.5px] text-ink2 mb-3">No se pudo cargar la data. Revisa tu conexión.</p>
+          <button onclick="fetchTransactions()" class="px-4 py-2 rounded-xl bg-gold/15 text-gold text-[13px] font-semibold">Reintentar</button>
         </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
-      </button>
-      <button onclick="forceSyncAll()" class="w-full flex items-center justify-between bg-surface border border-hair rounded-xl2 p-4 mb-3 active:bg-surface2 transition-colors">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-full bg-up/15 flex items-center justify-center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>
-          <div class="text-left"><p class="text-[14px] font-semibold">Guardar TODO en la nube</p><p class="text-[11.5px] text-ink2">Sube deudores y tarjetas a Sheets</p></div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
-      </button>
-    </section>
-  </main>
+      </section>
 
-  <!-- BOTTOM NAV -->
-  <nav class="safe-bottom border-t border-hair bg-base/90 backdrop-blur-xl fixed bottom-0 left-0 right-0">
+      <!-- VIEW 2: CARTERA -->
+      <section id="view-cartera" class="view">
+        <!-- MIS CUENTAS (dinámico) -->
+        <div class="flex items-center justify-between mb-2.5">
+          <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Mis cuentas</h2>
+          <button onclick="openNuevaCuenta()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Añadir cuenta</button>
+        </div>
+        <div id="cuentasList" class="space-y-2 mb-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0"></div>
+        <div id="cuentasEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-6 text-center mb-6"><p class="text-[13.5px] text-ink2">Aún no registras cuentas.<br>Ej. BCP Principal, Caja fuerte, Yape.</p></div>
+
+        <!-- MIS BIENES -->
+        <div class="flex items-center justify-between mb-2.5">
+          <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Mis bienes · Activos fijos</h2>
+          <button onclick="openNuevoBien()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Añadir bien</button>
+        </div>
+        <div id="bienesList" class="space-y-2 mb-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0"></div>
+        <div id="bienesEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-6 text-center mb-6"><p class="text-[13.5px] text-ink2">Aún no registras bienes.<br>Ej. Celular, Laptop, Moto.</p></div>
+
+        <!-- PASIVOS -->
+        <div class="flex items-center justify-between mb-2.5">
+          <h2 class="text-[13px] font-semibold text-ink2 uppercase tracking-wide">Pasivos · Tarjetas</h2>
+          <button onclick="openNuevaTarjeta()" class="flex items-center gap-1 text-gold text-[12.5px] font-semibold active:scale-95 transition-transform ease-out"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Añadir tarjeta</button>
+        </div>
+        <div id="tarjetasList" class="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0"></div>
+        <div id="tarjetasEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-8 text-center"><p class="text-[13.5px] text-ink2">Aún no registras tarjetas de crédito.</p></div>
+      </section>
+
+      <!-- VIEW 3: POR COBRAR -->
+      <section id="view-cxc" class="view">
+        <div class="rounded-xl2 border border-hair bg-surface p-4 mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p class="text-[12px] text-ink2 font-medium mb-0.5">Total por cobrar</p>
+            <p class="tabular text-[22px] font-extrabold text-gold" id="totalPorCobrar">S/ 0.00</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="limpiarTodosDeudores()" class="flex items-center gap-1 text-down/80 text-[11.5px] font-semibold active:scale-95 transition-transform ease-out px-2 py-1.5 rounded-lg hover:bg-down/10">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+              Limpiar todo
+            </button>
+            <button onclick="openNuevoDeudor()" class="flex items-center gap-1.5 bg-gold text-base font-semibold text-[13px] px-4 py-2.5 rounded-xl active:scale-95 transition-transform"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0B0D10" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nuevo</button>
+          </div>
+        </div>
+        <div id="deudoresList" class="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0"></div>
+        <div id="cxcEmpty" class="hidden rounded-xl2 border border-dashed border-hair p-8 text-center"><p class="text-[13.5px] text-ink2">Aún no registras deudores.</p></div>
+      </section>
+
+      <!-- VIEW 4: HERRAMIENTAS -->
+      <section id="view-tools" class="view">
+        <p class="text-[12.5px] text-ink2 font-medium mb-3 mt-1">Sincronización</p>
+        <div class="md:grid md:grid-cols-2 md:gap-3">
+        <button onclick="fetchTransactions(true)" class="w-full flex items-center justify-between bg-surface border border-hair rounded-xl2 p-4 mb-3 active:bg-surface2 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-goldSoft flex items-center justify-center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></div>
+            <div class="text-left"><p class="text-[14px] font-semibold">Forzar actualización</p><p class="text-[11.5px] text-ink2" id="toolsLastSync">Jala datos de la nube</p></div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button onclick="forceSyncAll()" class="w-full flex items-center justify-between bg-surface border border-hair rounded-xl2 p-4 mb-3 active:bg-surface2 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-up/15 flex items-center justify-center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>
+            <div class="text-left"><p class="text-[14px] font-semibold">Guardar TODO en la nube</p><p class="text-[11.5px] text-ink2">Sube deudores y tarjetas a Sheets</p></div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- BOTTOM NAV (solo mobile) -->
+  <nav class="md:hidden safe-bottom border-t border-hair bg-base/90 backdrop-blur-xl fixed bottom-0 left-0 right-0">
     <div class="max-w-md mx-auto grid grid-cols-4">
       <button class="navbtn active flex flex-col items-center gap-1 py-3" data-tab="dashboard" onclick="switchTab('dashboard')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="17" rx="1"/></svg><span class="navlabel text-[10px] font-medium text-gold">Dashboard</span></button>
       <button class="navbtn flex flex-col items-center gap-1 py-3" data-tab="cartera" onclick="switchTab('cartera')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-3a2 2 0 0 0 0 4h3"/><path d="M16 3H5a2 2 0 0 0-2 2v3"/></svg><span class="navlabel text-[10px] font-medium text-ink2">Cartera</span></button>
@@ -198,13 +259,13 @@
   </nav>
 
   <!-- FAB -->
-  <button onclick="openMovimiento()" class="fixed right-5 z-30 w-14 h-14 rounded-full bg-gold shadow-lg shadow-black/40 flex items-center justify-center active:scale-90 transition-transform ease-out" style="bottom: calc(96px + env(safe-area-inset-bottom, 20px));"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B0D10" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button id="fabMovimiento" onclick="openMovimiento()" class="fixed right-5 z-30 w-14 h-14 rounded-full bg-gold shadow-lg shadow-black/40 flex items-center justify-center active:scale-90 transition-transform ease-out" style="bottom: calc(96px + env(safe-area-inset-bottom, 20px));"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B0D10" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
 
   <!-- MODALS -->
   <!-- Modales de Deudores -->
-  <div id="sheetDeudor" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetDeudor')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4">Nuevo deudor</h3>
+  <div id="sheetDeudor" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end md:items-center md:justify-center" onclick="if(event.target===this) closeSheet('sheetDeudor')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl md:rounded-3xl border-t md:border border-hair p-5 safe-bottom md:safe-bottom-0">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4 md:hidden"></div><h3 class="text-[16px] font-semibold mb-4">Nuevo deudor</h3>
       <input id="inpNombre" type="text" placeholder="Ej. Juan Pérez" class="w-full bg-surface2 border border-hair rounded-xl px-4 py-3 text-[15px] mb-4 outline-none">
       <div class="relative mb-6">
         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-ink2 font-semibold pointer-events-none">S/</span>
@@ -214,9 +275,9 @@
     </div>
   </div>
 
-  <div id="sheetAbono" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetAbono')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-1">Registrar abono</h3>
+  <div id="sheetAbono" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end md:items-center md:justify-center" onclick="if(event.target===this) closeSheet('sheetAbono')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl md:rounded-3xl border-t md:border border-hair p-5 safe-bottom">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4 md:hidden"></div><h3 class="text-[16px] font-semibold mb-1">Registrar abono</h3>
       <p class="text-[13px] text-ink2 mb-4" id="abonoDeudorNombre">—</p>
       <p class="tabular text-[20px] font-bold text-gold mb-4" id="abonoSaldoActual">S/ 0.00</p>
       <div class="relative mb-6">
@@ -228,9 +289,9 @@
   </div>
 
   <!-- Modal Cuenta -->
-  <div id="sheetCuenta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetCuenta')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="cuentaSheetTitle">Nueva cuenta</h3>
+  <div id="sheetCuenta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end md:items-center md:justify-center" onclick="if(event.target===this) closeSheet('sheetCuenta')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl md:rounded-3xl border-t md:border border-hair p-5 safe-bottom">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4 md:hidden"></div><h3 class="text-[16px] font-semibold mb-4" id="cuentaSheetTitle">Nueva cuenta</h3>
       <input type="hidden" id="cuentaEditId" value="">
 
       <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Nombre de la cuenta</label>
@@ -247,9 +308,9 @@
   </div>
 
   <!-- Modal Tarjeta -->
-  <div id="sheetTarjeta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetTarjeta')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="tarjetaSheetTitle">Nueva tarjeta</h3>
+  <div id="sheetTarjeta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end md:items-center md:justify-center" onclick="if(event.target===this) closeSheet('sheetTarjeta')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl md:rounded-3xl border-t md:border border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4 md:hidden"></div><h3 class="text-[16px] font-semibold mb-4" id="tarjetaSheetTitle">Nueva tarjeta</h3>
       <input type="hidden" id="tarjetaEditId" value="">
 
       <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Banco / Tarjeta</label>
@@ -294,9 +355,9 @@
   </div>
 
   <!-- Modal Bien (Activo fijo) -->
-  <div id="sheetBien" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetBien')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4" id="bienSheetTitle">Nuevo bien</h3>
+  <div id="sheetBien" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end md:items-center md:justify-center" onclick="if(event.target===this) closeSheet('sheetBien')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl md:rounded-3xl border-t md:border border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4 md:hidden"></div><h3 class="text-[16px] font-semibold mb-4" id="bienSheetTitle">Nuevo bien</h3>
       <input type="hidden" id="bienEditId" value="">
 
       <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Nombre del bien</label>
@@ -327,9 +388,9 @@
   </div>
 
   <!-- Modal Pago Tarjeta -->
-  <div id="sheetPagoTarjeta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetPagoTarjeta')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-1">Pagar tarjeta</h3>
+  <div id="sheetPagoTarjeta" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end md:items-center md:justify-center" onclick="if(event.target===this) closeSheet('sheetPagoTarjeta')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl md:rounded-3xl border-t md:border border-hair p-5 safe-bottom">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4 md:hidden"></div><h3 class="text-[16px] font-semibold mb-1">Pagar tarjeta</h3>
       <p class="text-[13px] text-ink2 mb-4" id="pagoTarjNombre">—</p>
       <input type="hidden" id="pagoTarjId" value="">
       <label class="text-[12px] text-ink2 font-medium mb-1.5 block">Monto a pagar</label>
@@ -344,9 +405,9 @@
   </div>
 
   <!-- Modal Movimiento Manual -->
-  <div id="sheetMovimiento" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end" onclick="if(event.target===this) closeSheet('sheetMovimiento')">
-    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl border-t border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
-      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4"></div><h3 class="text-[16px] font-semibold mb-4">Nuevo movimiento</h3>
+  <div id="sheetMovimiento" class="sheet-overlay fixed inset-0 bg-black/60 z-40 flex items-end md:items-center md:justify-center" onclick="if(event.target===this) closeSheet('sheetMovimiento')">
+    <div class="sheet-panel w-full max-w-md mx-auto bg-surface rounded-t-3xl md:rounded-3xl border-t md:border border-hair p-5 safe-bottom max-h-[88vh] overflow-y-auto scrollbar-none">
+      <div class="w-9 h-1 bg-hair rounded-full mx-auto mb-4 md:hidden"></div><h3 class="text-[16px] font-semibold mb-4">Nuevo movimiento</h3>
       <div class="grid grid-cols-2 gap-3 mb-4" id="movTipoToggle">
         <button type="button" onclick="setMovTipo('Ingreso')" data-tipo="Ingreso" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Ingreso</button>
         <button type="button" onclick="setMovTipo('Gasto')" data-tipo="Gasto" class="mov-tipo-btn py-3 rounded-xl border text-[13.5px] font-semibold active:scale-95 transition-transform ease-out">Gasto</button>
@@ -393,6 +454,10 @@ const LS_KEY_SALDOS = 'finctrl_saldos_iniciales_v1'; /* legado, solo se lee una 
 const LS_KEY_BIENES = 'finctrl_bienes_v1';
 const LS_KEY_CUENTAS = 'finctrl_cuentas_v1';
 
+/* Lock screen */
+const LOCK_PASSWORD = 'admin123';
+const SESSION_UNLOCK_KEY = 'finctrl_unlocked';
+
 const fmtMoney = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', minimumFractionDigits: 2 });
 const money = (n) => fmtMoney.format(Number(n) || 0);
 
@@ -403,6 +468,27 @@ let bienEditandoId = null;
 let cuentaEditandoId = null;
 let movTipoActual = 'Gasto';
 let pagoTarjetaIdActual = null;
+
+/* =========================================================
+   LOCK SCREEN
+========================================================= */
+(function checkLock() {
+  if (sessionStorage.getItem(SESSION_UNLOCK_KEY) === '1') {
+    document.getElementById('lockScreen').classList.add('hidden');
+  }
+})();
+
+function intentarDesbloqueo() {
+  const input = document.getElementById('lockInput');
+  if (input.value === LOCK_PASSWORD) {
+    sessionStorage.setItem(SESSION_UNLOCK_KEY, '1');
+    document.getElementById('lockScreen').classList.add('hidden');
+  } else {
+    showToast('Contraseña incorrecta');
+    input.value = '';
+    input.focus();
+  }
+}
 
 /* =========================================================
    UI Y NAVEGACIÓN
@@ -441,8 +527,6 @@ function escapeHtml(str) { return String(str).replaceAll('&', '&amp;').replaceAl
 
 /* =========================================================
    SINCRONIZACIÓN API (LA MAGIA DE LA NUBE) — INTACTO
-   (única variación: el payload de sync_config ahora manda
-   "cuentas" en lugar de "saldosIniciales", tal como se pidió)
 ========================================================= */
 async function syncDeudoresApi() {
   showToast('Guardando deudores en la nube...');
@@ -466,9 +550,6 @@ function forceSyncAll() {
 
 /* =========================================================
    DASHBOARD: FETCH + RENDER — LÓGICA DE RED INTACTA
-   (única adición: si raw.config trae "cuentas", se hidrata igual
-   que ya se hacía con tarjetas/bienes, para que la nube sea la
-   fuente de verdad también para Mis Cuentas)
 ========================================================= */
 async function fetchTransactions(manual = false) {
   const dot = document.getElementById('statusDot');
@@ -567,8 +648,6 @@ async function deleteMovimiento(id) {
 
 /* =========================================================
    PATRIMONIO NETO 360°
-   Activos = Σ saldos de Mis Cuentas + Cuentas por cobrar + Bienes
-   Pasivos = Σ deudas actuales de tarjetas
 ========================================================= */
 function renderPatrimonio() {
   const totalCuentas = loadCuentas().reduce((s, c) => s + computeSaldoCuenta(c), 0);
@@ -648,12 +727,20 @@ function confirmarAbono() {
 }
 
 /* =========================================================
+   ELIMINAR TODOS LOS DEUDORES
+========================================================= */
+function limpiarTodosDeudores() {
+  if (!loadDeudores().length) { showToast('No hay deudores registrados'); return; }
+  if (!confirm('¿Seguro que deseas eliminar TODOS los deudores? Esta acción no se puede deshacer y se sincronizará con la nube de inmediato.')) return;
+  localStorage.setItem(LS_KEY, JSON.stringify([]));
+  renderDeudores();
+  renderPatrimonio();
+  syncDeudoresApi(); // AUTO-SYNC obligatorio: refleja el borrado masivo en Google Sheets
+  showToast('Todos los deudores fueron eliminados');
+}
+
+/* =========================================================
    MIS CUENTAS (Multi-cuentas dinámicas)
-   Reemplaza la vieja estructura fija Efectivo/Bancos.
-   Migración: si el usuario ya tenía saldos iniciales guardados
-   con la versión anterior de la app y aún no tiene cuentas,
-   se crean automáticamente dos cuentas "Efectivo" y "Bancos"
-   con esos montos, para no perder su información.
 ========================================================= */
 function loadCuentas() {
   try {
@@ -661,7 +748,6 @@ function loadCuentas() {
     if (raw) return JSON.parse(raw) || [];
   } catch(e) {}
 
-  // Migración única desde la vieja estructura de saldos iniciales
   try {
     const legacyRaw = localStorage.getItem(LS_KEY_SALDOS);
     if (legacyRaw) {
@@ -867,7 +953,7 @@ function eliminarBien(id) {
 }
 
 /* =========================================================
-   TARJETAS DE CRÉDITO (PASIVOS) — fechas exactas de vencimiento
+   TARJETAS DE CRÉDITO (PASIVOS)
 ========================================================= */
 function loadTarjetas() { try { return JSON.parse(localStorage.getItem(LS_KEY_TARJETAS)) || []; } catch(e) { return []; } }
 
