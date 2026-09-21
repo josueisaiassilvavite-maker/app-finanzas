@@ -79,6 +79,15 @@
 
   /* Lock screen */
   #lockScreen.hidden { display: none !important; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 999px; border: 1.5px solid #262B31; background: transparent; transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+  .pin-dot.filled { background: #CBA35C; border-color: #CBA35C; transform: scale(1.1); }
+  .pin-dots.shake { animation: pinShake .4s ease; }
+  @keyframes pinShake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-8px); } 40%, 60% { transform: translateX(8px); } }
+  .keypad-btn { background: #15181C; border: 1px solid #262B31; color: #F2F0EB; transition: transform .1s ease, background .1s ease; }
+  .keypad-btn:active { transform: scale(0.92); background: #1C2025; }
+
+  /* Gastos por categoría */
+  .cat-bar-track { background: #262B31; }
 
   /* FAB: on desktop no hay bottom-nav, así que baja el offset */
   @media (min-width: 768px) {
@@ -89,15 +98,37 @@
 
 <body class="bg-base text-ink min-h-screen scrollbar-none">
 
-<!-- ===================== LOCK SCREEN ===================== -->
+<!-- ===================== LOCK SCREEN (PIN estilo iOS) ===================== -->
 <div id="lockScreen" class="fixed inset-0 z-[100] bg-base flex flex-col items-center justify-center px-8">
   <div class="w-16 h-16 rounded-2xl bg-goldSoft flex items-center justify-center mb-5">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
   </div>
   <h1 class="text-[20px] font-bold mb-1">Control Financiero</h1>
-  <p class="text-[13px] text-ink2 mb-8">Ingresa tu clave para continuar</p>
-  <input id="lockInput" type="password" inputmode="numeric" autocomplete="off" placeholder="••••••••" onkeydown="if(event.key==='Enter') intentarDesbloqueo()" class="w-full max-w-[280px] text-center tracking-[0.3em] bg-surface border border-hair rounded-xl px-4 py-3.5 text-[18px] text-ink outline-none focus:border-gold/60 mb-4">
-  <button onclick="intentarDesbloqueo()" class="w-full max-w-[280px] py-3.5 rounded-xl bg-gold text-base font-bold active:scale-95 transition-transform ease-out">Ingresar</button>
+  <p class="text-[13px] text-ink2 mb-8">Ingresa tu PIN para continuar</p>
+
+  <div id="pinDots" class="flex items-center gap-4 mb-10">
+    <div class="pin-dot" data-dot="0"></div>
+    <div class="pin-dot" data-dot="1"></div>
+    <div class="pin-dot" data-dot="2"></div>
+    <div class="pin-dot" data-dot="3"></div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4 w-full max-w-[280px]">
+    <button onclick="pinDigit('1')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">1</button>
+    <button onclick="pinDigit('2')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">2</button>
+    <button onclick="pinDigit('3')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">3</button>
+    <button onclick="pinDigit('4')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">4</button>
+    <button onclick="pinDigit('5')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">5</button>
+    <button onclick="pinDigit('6')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">6</button>
+    <button onclick="pinDigit('7')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">7</button>
+    <button onclick="pinDigit('8')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">8</button>
+    <button onclick="pinDigit('9')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">9</button>
+    <div></div>
+    <button onclick="pinDigit('0')" class="keypad-btn h-16 rounded-2xl text-[20px] font-semibold active:scale-95 transition-transform ease-out">0</button>
+    <button onclick="pinBackspace()" class="keypad-btn h-16 rounded-2xl flex items-center justify-center active:scale-95 transition-transform ease-out">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M18 9l-6 6M12 9l6 6"/></svg>
+    </button>
+  </div>
 </div>
 
 <div class="min-h-screen flex flex-col md:flex-row relative max-w-md md:max-w-none mx-auto">
@@ -168,6 +199,16 @@
             </div>
           </div>
         </div>
+
+        <!-- GASTOS POR CATEGORÍA -->
+        <div class="rounded-xl2 border border-hair bg-surface p-4 md:p-5 mb-6 md:max-w-xl">
+          <h2 class="text-[14.5px] font-semibold mb-3.5">Gastos por categoría</h2>
+          <div id="categoriaGastos" class="space-y-3"></div>
+          <div id="categoriaGastosEmpty" class="hidden text-center py-3">
+            <p class="text-[13px] text-ink2">Sin gastos registrados todavía.</p>
+          </div>
+        </div>
+
         <div class="flex items-center justify-between mb-2 mt-6">
           <h2 class="text-[14.5px] font-semibold">Últimos movimientos</h2>
           <span class="text-[11.5px] text-ink2" id="lastSync">—</span>
@@ -240,6 +281,13 @@
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-full bg-up/15 flex items-center justify-center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3FC17E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>
             <div class="text-left"><p class="text-[14px] font-semibold">Guardar TODO en la nube</p><p class="text-[11.5px] text-ink2">Sube deudores y tarjetas a Sheets</p></div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button onclick="exportarMovimientosCSV()" class="w-full flex items-center justify-between bg-surface border border-hair rounded-xl2 p-4 mb-3 active:bg-surface2 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-goldSoft flex items-center justify-center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CBA35C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 11l4 4 4-4M4 21h16"/></svg></div>
+            <div class="text-left"><p class="text-[14px] font-semibold">Exportar movimientos (CSV)</p><p class="text-[11.5px] text-ink2">Descarga tu historial completo</p></div>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0A8" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
         </button>
@@ -454,9 +502,10 @@ const LS_KEY_SALDOS = 'finctrl_saldos_iniciales_v1'; /* legado, solo se lee una 
 const LS_KEY_BIENES = 'finctrl_bienes_v1';
 const LS_KEY_CUENTAS = 'finctrl_cuentas_v1';
 
-/* Lock screen */
-const LOCK_PASSWORD = 'admin123';
+/* Lock screen: PIN numérico de 4 dígitos */
+const LOCK_PASSWORD = '2026';
 const SESSION_UNLOCK_KEY = 'finctrl_unlocked';
+let pinBuffer = '';
 
 const fmtMoney = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', minimumFractionDigits: 2 });
 const money = (n) => fmtMoney.format(Number(n) || 0);
@@ -470,7 +519,7 @@ let movTipoActual = 'Gasto';
 let pagoTarjetaIdActual = null;
 
 /* =========================================================
-   LOCK SCREEN
+   LOCK SCREEN — PIN estilo iOS con 4 puntos + teclado numérico
 ========================================================= */
 (function checkLock() {
   if (sessionStorage.getItem(SESSION_UNLOCK_KEY) === '1') {
@@ -478,17 +527,49 @@ let pagoTarjetaIdActual = null;
   }
 })();
 
-function intentarDesbloqueo() {
-  const input = document.getElementById('lockInput');
-  if (input.value === LOCK_PASSWORD) {
+function updatePinDots() {
+  document.querySelectorAll('.pin-dot').forEach((dot, i) => {
+    dot.classList.toggle('filled', i < pinBuffer.length);
+  });
+}
+
+function pinDigit(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(checkPin, 120); // pequeña pausa para que se vea el 4º punto llenarse
+  }
+}
+
+function pinBackspace() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+}
+
+function checkPin() {
+  if (pinBuffer === LOCK_PASSWORD) {
     sessionStorage.setItem(SESSION_UNLOCK_KEY, '1');
     document.getElementById('lockScreen').classList.add('hidden');
   } else {
-    showToast('Contraseña incorrecta');
-    input.value = '';
-    input.focus();
+    showToast('PIN incorrecto');
+    const dotsEl = document.getElementById('pinDots');
+    dotsEl.classList.add('shake');
+    setTimeout(() => {
+      dotsEl.classList.remove('shake');
+      pinBuffer = '';
+      updatePinDots();
+    }, 400);
   }
 }
+
+/* Soporte de teclado físico (desktop) mientras el lock screen está visible */
+window.addEventListener('keydown', (e) => {
+  const lockVisible = !document.getElementById('lockScreen').classList.contains('hidden');
+  if (!lockVisible) return;
+  if (e.key >= '0' && e.key <= '9') pinDigit(e.key);
+  else if (e.key === 'Backspace') pinBackspace();
+});
 
 /* =========================================================
    UI Y NAVEGACIÓN
@@ -604,6 +685,7 @@ function renderDashboard() {
   document.getElementById('totalIngresos').textContent = money(ingresos);
   document.getElementById('totalGastos').textContent = money(gastos);
   renderPatrimonio();
+  renderCategoriaGastos();
 
   const sorted = [...transactions].sort((a, b) => (new Date(b.fecha).getTime() || 0) - (new Date(a.fecha).getTime() || 0));
   const el = document.getElementById('movList');
@@ -629,6 +711,46 @@ function renderDashboard() {
 }
 
 /* =========================================================
+   GASTOS POR CATEGORÍA (Dashboard)
+========================================================= */
+function renderCategoriaGastos() {
+  const el = document.getElementById('categoriaGastos');
+  const empty = document.getElementById('categoriaGastosEmpty');
+
+  const gastos = transactions.filter(t => t.tipo.includes('gasto'));
+  if (!gastos.length) { el.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  const porCategoria = {};
+  gastos.forEach(t => {
+    const cat = t.categoria || 'Otros';
+    porCategoria[cat] = (porCategoria[cat] || 0) + Math.abs(t.monto);
+  });
+
+  const entradas = Object.entries(porCategoria).sort((a, b) => b[1] - a[1]);
+  const totalGasto = entradas.reduce((s, [, v]) => s + v, 0);
+  const maxCategoria = entradas[0][1];
+
+  const colores = ['#CBA35C', '#3FC17E', '#E5635C', '#6B9BD1', '#B285D1', '#D19A5C', '#5CC7B8', '#D1CE5C'];
+
+  el.innerHTML = entradas.map(([cat, monto], i) => {
+    const pctBarra = maxCategoria > 0 ? Math.max(4, Math.round((monto / maxCategoria) * 100)) : 0;
+    const pctTotal = totalGasto > 0 ? Math.round((monto / totalGasto) * 100) : 0;
+    const color = colores[i % colores.length];
+    return `
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[13px] font-medium truncate">${escapeHtml(cat)}</span>
+          <span class="tabular text-[12.5px] font-semibold text-ink2 shrink-0 ml-2">${money(monto)} <span class="text-ink2/70">· ${pctTotal}%</span></span>
+        </div>
+        <div class="h-2 cat-bar-track rounded-full overflow-hidden">
+          <div class="h-full rounded-full" style="width:${pctBarra}%; background:${color}"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* =========================================================
    ELIMINAR MOVIMIENTO
 ========================================================= */
 async function deleteMovimiento(id) {
@@ -644,6 +766,42 @@ async function deleteMovimiento(id) {
     console.error('deleteMovimiento error:', err);
     showToast('No se pudo eliminar el movimiento');
   }
+}
+
+/* =========================================================
+   EXPORTAR MOVIMIENTOS A CSV
+========================================================= */
+function csvEscape(val) {
+  const s = String(val ?? '');
+  if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportarMovimientosCSV() {
+  if (!transactions.length) { showToast('No hay movimientos para exportar'); return; }
+
+  const headers = ['Fecha', 'Tipo', 'Categoría', 'Canal', 'Detalle', 'Monto'];
+  const filas = transactions.map(t => [
+    t.fecha || '',
+    t.tipo.includes('ingreso') ? 'Ingreso' : 'Gasto',
+    t.categoria || '',
+    t.canal || '',
+    t.detalle || '',
+    Math.abs(t.monto).toFixed(2)
+  ]);
+
+  const csv = [headers, ...filas].map(fila => fila.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const stamp = new Date().toISOString().slice(0, 10);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `movimientos_${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV descargado');
 }
 
 /* =========================================================
