@@ -1246,26 +1246,103 @@ function openMovimiento() {
   openSheet('sheetMovimiento');
 }
 
+
+let movimientoGuardando = false;
+let intentoManualPendiente = null;
+
 async function guardarMovimiento() {
-  const m = parseFloat(document.getElementById('inpMovMonto').value); if(!m || m<=0) return showToast('Monto inválido');
+  if (movimientoGuardando) return;
+
+  const m = parseFloat(
+    document.getElementById('inpMovMonto').value
+  );
+
+  if (!Number.isFinite(m) || m <= 0) {
+    return showToast('Monto inválido');
+  }
+
   const canal = document.getElementById('selMovCanal').value;
-  if (!canal) return showToast('Crea una cuenta primero en Cartera');
-  const payload = { tipo: movTipoActual, monto: m, categoria: document.getElementById('selMovCategoria').value, canal: canal, detalle: document.getElementById('inpMovDetalle').value, fecha: new Date().toISOString() };
-  showToast('Guardando...'); closeSheet('sheetMovimiento');
-  const ok = await guardarManual(payload);
-  if (ok) { showToast('Guardado con éxito'); fetchTransactions(); } else { showToast('Error al guardar'); }
+
+  if (!canal) {
+    return showToast('Crea una cuenta primero en Cartera');
+  }
+
+  const datos = {
+    tipo: movTipoActual,
+    monto: m,
+    categoria: document.getElementById('selMovCategoria').value,
+    canal: canal,
+    detalle: document.getElementById('inpMovDetalle').value.trim()
+  };
+
+  const firma = JSON.stringify(datos);
+
+  if (!intentoManualPendiente ||
+      intentoManualPendiente.firma !== firma) {
+    intentoManualPendiente = {
+      firma: firma,
+      payload: {
+        ...datos,
+        fecha: new Date().toISOString(),
+        origenId: 'manual:' + crypto.randomUUID()
+      }
+    };
+  }
+
+  movimientoGuardando = true;
+  showToast('Guardando movimiento...');
+
+  try {
+    const ok = await guardarManual(
+      intentoManualPendiente.payload
+    );
+
+    if (ok) {
+      intentoManualPendiente = null;
+      closeSheet('sheetMovimiento');
+      showToast('Guardado con éxito');
+      await fetchTransactions();
+    } else {
+      showToast('No se confirmó. Pulsa Guardar para reintentar');
+    }
+  } finally {
+    movimientoGuardando = false;
+  }
 }
 
 /* =========================================================
    guardarManual — INTACTO (POST del movimiento a la API)
 ========================================================= */
+
 async function guardarManual(payload) {
   try {
-    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'movimiento', ...payload }) });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        action: "movimiento",
+        ...payload
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error("HTTP " + res.status);
+    }
+
+    const respuesta = await res.json();
+
+    if (!["success", "duplicate"].includes(respuesta.status)) {
+      throw new Error(
+        respuesta.message || "No se guardó el movimiento"
+      );
+    }
+
     return true;
-  } catch (err) {
-    console.error('guardarManual error:', err);
+
+  } catch (error) {
+    console.error("Error al guardar:", error);
     return false;
   }
 }
